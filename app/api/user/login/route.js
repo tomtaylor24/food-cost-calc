@@ -11,7 +11,7 @@ export async function POST(request) {
                   .single() // オブジェクトで返す
     if(!error){ // エラーでない = ユーザー登録済みの場合
       if(reqBody.password === data.password){ // パスワードが合っている場合
-        const secretKey = new TextEncoder().encode("food-cost-calc-route-handlers")
+        const secretKey = new TextEncoder().encode(process.env.JWT_SECRET)
         //↑TextEncoder().encode(文字) = 文字列をシークレットキーの形式に変換↑
         const payload = { // payload=トークンのデータ、 一般的にユーザー名やメールアドレス
           email: reqBody.email,
@@ -20,7 +20,6 @@ export async function POST(request) {
                             .setProtectedHeader({alg: "HS256"}) // 署名の方式
                             .setExpirationTime("1d") // トークンお有効期限
                             .sign(secretKey) // secretKeyでsign(署名)
-        console.log(token)
         return NextResponse.json({
                                   message: "ログイン成功",
                                   token: token

@@ -12,7 +12,7 @@ export async function proxy (request) {
   }
   
   try{ // トークンがある場合
-    const secretKey = new TextEncoder().encode("food-cost-calc-route-handlers")
+    const secretKey = new TextEncoder().encode(process.env.JWT_SECRET)
     const decodedJwt = await jwtVerify(token, secretKey)
     //↑ログインのrequestに含まれるtokenとsecretKeyが合致するか確認↑
     return NextResponse.next()

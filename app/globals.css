@@ -1,0 +1,38 @@
+html,
+body{
+  color: #333;
+}
+li{
+  list-style: none;
+}
+a{
+  text-decoration: none;
+  color: #333;
+  &:hover{
+    opacity: 0.5;
+  }
+}
+
+.foodList{
+
+}
+
+.foodList__item{
+  a{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+}
+.headerLink{
+  display: flex;
+  gap: 20px;
+}
+
+.headerLink__item{
+}
+
+.btn{
+  border: 1px solid #333;
+  padding: 20px 40px;
+}
