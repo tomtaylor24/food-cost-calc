@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import supabase from "@/app/utils/database";
 import { SignJWT } from "jose"; // トークンを発行するためのもの
+import bcrypt from "bcryptjs";
 
 export async function POST(request) {
   const reqBody = await request.json() // メールアドレス取得のため
@@ -10,10 +11,11 @@ export async function POST(request) {
                   .eq("email", reqBody.email) // テーブルのemailがreqBodyのemailと等しい
                   .single() // オブジェクトで返す
     if(!error){ // エラーでない = ユーザー登録済みの場合
-      if(reqBody.password === data.password){ // パスワードが合っている場合
+      if(await bcrypt.compare(reqBody.password, data.password_hash)){ // パスワードが合っている場合
         const secretKey = new TextEncoder().encode(process.env.JWT_SECRET)
         //↑TextEncoder().encode(文字) = 文字列をシークレットキーの形式に変換↑
         const payload = { // payload=トークンのデータ、 一般的にユーザー名やメールアドレス
+          userId: data.id,
           email: reqBody.email,
         }
         const token = await new SignJWT(payload) //トークンに入れる中身、この場合はpayload=email
@@ -25,12 +27,12 @@ export async function POST(request) {
                                   token: token
                                 })
       }else{ // パスワードが間違えている場合
-        return NextResponse.json({message: "ログイン失敗：パスワードが間違っています"})
+        return NextResponse.json({message: "ログイン失敗：メールアドレスまたはパスワードが違います"}, {status: 401}) // 401 = 認証失敗
       }
     }else{ // エラー = ユーザー登録をしていない
-      return NextResponse.json({message: "ログイン失敗：ユーザー登録をしてください"})
+      return NextResponse.json({message: "ログイン失敗：メールアドレスまたはパスワードが違います"}, {status: 401}) // 401 = 認証失敗
     }
   }catch{
-    return NextResponse.json({message: "ログイン失敗"})
+    return NextResponse.json({message: "ログイン失敗"}, {status: 500}) // 500 = サーバーのエラー
   }
 }
