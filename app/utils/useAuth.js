@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { jwtVerify } from "jose"
+import { decodeJwt } from "jose"
 
 const useAuth = () => {
   const [loginUserEmail, setLoginUserEmail] = useState("")
@@ -15,9 +15,8 @@ const useAuth = () => {
       }
     
       try{
-        const secretKey = new TextEncoder().encode("food-cost-calc-route-handlers") //後ほど変更
-        const decodedJwt = await jwtVerify(token, secretKey)
-        setLoginUserEmail(decodedJwt.payload.email)
+        const payload = decodeJwt(token)
+        setLoginUserEmail(payload.email)
       }catch(error){
         router.push("/user/login")
       }
@@ -27,6 +26,5 @@ const useAuth = () => {
 
   return loginUserEmail
 }
-
 
 export default useAuth
