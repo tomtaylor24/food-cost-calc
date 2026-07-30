@@ -20,7 +20,7 @@ export async function POST(request) {
         }
         const token = await new SignJWT(payload) //トークンに入れる中身、この場合はpayload=email
                             .setProtectedHeader({alg: "HS256"}) // 署名の方式
-                            .setExpirationTime("1d") // トークンお有効期限
+                            .setExpirationTime("3d") // トークンお有効期限
                             .sign(secretKey) // secretKeyでsign(署名)
         return NextResponse.json({
                                   message: "ログイン成功",
