@@ -2,15 +2,16 @@ import Link from "next/link"
 
 const Header = () => {
     return (
-        <header>
+        <header className="header">
             <Link href="/">
               <h1>飲食店原価計算ツール</h1>
             </Link>
             <nav>
                 <ul className="headerLink">
-                    <li className="headerLink__item"><Link href="/user/register">登録</Link></li>
+                    <li className="headerLink__item"><Link href="/user/register">会員登録</Link></li>
                     <li className="headerLink__item"><Link href="/user/login">ログイン</Link></li>
-                    <li className="headerLink__item"><Link href="/item/create">アイテム作成</Link></li>
+                    <li className="headerLink__item"><Link href="/ingredients/create">食材登録</Link></li>
+                    <li className="headerLink__item"><Link href="/ingredients/">食材一覧</Link></li>
                 </ul>
             </nav>
         </header>
