@@ -12,6 +12,8 @@ const Header = () => {
                     <li className="headerLink__item"><Link href="/user/login">ログイン</Link></li>
                     <li className="headerLink__item"><Link href="/ingredients/create">食材登録</Link></li>
                     <li className="headerLink__item"><Link href="/ingredients/">食材一覧</Link></li>
+                    <li className="headerLink__item"><Link href="/dishes/create">商品登録</Link></li>
+                    <li className="headerLink__item"><Link href="/dishes/">商品一覧</Link></li>
                 </ul>
             </nav>
         </header>
