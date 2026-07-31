@@ -65,9 +65,9 @@ export async function DELETE(request, context) {
         .eq("id", params.id)
         .eq("user_id", payload.userId)
       if (error) throw new Error(error.message)
-      return NextResponse.json({ message: "食材削除成功" }, { status: 200 })
+      return NextResponse.json({ message: "商品削除成功" }, { status: 200 })
     } catch (error) {
-      return NextResponse.json({ message: `食材削除失敗: ${error.message}` }, { status: 500 })
+      return NextResponse.json({ message: `商品削除失敗: ${error.message}` }, { status: 500 })
     }
   }
 }
