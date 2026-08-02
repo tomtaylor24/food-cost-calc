@@ -44,8 +44,7 @@ const CreateDishes = () => {
         body: JSON.stringify({
           name: name,
           sellingPrice: sellingPrice,
-          ingredientId: rows[0].ingredientId,
-          quantity: rows[0].quantity
+          rows: rows
         })
       })
       const jsonData = await response.json()
