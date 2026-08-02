@@ -10,14 +10,44 @@ export async function POST(request) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
   } else {
     try {
-      const { error } = await supabase
+      const { error: ingredientError } = await supabase
+        .from("ingredients")
+        .select("id")
+        .eq("id", Number(reqBody.ingredientId))
+        .eq("user_id", payload.userId)
+        .single()
+
+      if (ingredientError) {
+        return NextResponse.json({ message: "食材が見つかりません" }, { status: 400 })
+      }
+
+      const { data, error } = await supabase
         .from("dishes")
         .insert({
           user_id: payload.userId,
           name: reqBody.name,
           selling_price: Number(reqBody.sellingPrice)
         })
+        .select()
+        .single()
+
       if (error) throw new Error(error.message)
+
+      const { error: itemError } = await supabase
+        .from("dish_ingredients")
+        .insert({
+          dish_id: data.id,
+          ingredient_id: Number(reqBody.ingredientId),
+          quantity: Number(reqBody.quantity)
+        })
+
+      if (itemError) {
+        await supabase
+          .from("dishes")
+          .delete()
+          .eq("id", data.id)
+        throw new Error(itemError.message)
+      }
       return NextResponse.json({ message: "商品登録成功" }, { status: 201 })
     } catch (error) {
       return NextResponse.json({ message: `商品登録失敗: ${error.message}` }, { status: 500 })

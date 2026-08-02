@@ -6,6 +6,7 @@ import useAuth from "@/app/utils/useAuth"
 const UpdateDish = (context) => {
   const [name, setName] = useState("")
   const [sellingPrice, setSellingPrice] = useState("")
+  const [dishIngredients, setDishIngredients] = useState([])
 
   const router = useRouter()
   const loginUserEmail = useAuth()
@@ -23,6 +24,7 @@ const UpdateDish = (context) => {
       if (response.ok) {
         setName(singleItem.name)
         setSellingPrice(singleItem.selling_price)
+        setDishIngredients(singleItem.dish_ingredients)
       }
     }
     getDish()
@@ -84,6 +86,14 @@ const UpdateDish = (context) => {
           <button>更新</button>
           <button type="button" onClick={handleDelete}>削除</button>
         </form>
+        <h2>使っている食材</h2>
+        <ul>
+          {dishIngredients.map((item) => (
+            <li key={item.id}>
+              {item.ingredients.name} {item.quantity}{item.ingredients.unit}
+            </li>
+          ))}
+        </ul>
       </div>
     )
   }

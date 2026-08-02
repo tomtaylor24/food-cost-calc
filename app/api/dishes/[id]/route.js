@@ -12,11 +12,12 @@ export async function GET(request, context) {
       const params = await context.params
       const { data, error } = await supabase
         .from("dishes")
-        .select()
+        .select("*, dish_ingredients(id, quantity, ingredients(name, unit, purchase_price, purchase_quantity))")
         .eq("id", params.id)
         .eq("user_id", payload.userId)
         .single()
       if (error) throw new Error(error.message)
+        console.log(JSON.stringify(data, null, 2))
       return NextResponse.json({
         message: "商品詳細取得成功",
         dish: data
