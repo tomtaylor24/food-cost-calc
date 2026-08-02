@@ -8,8 +8,7 @@ const CreateDishes = () => {
   const [sellingPrice, setSellingPrice] = useState("")
   const [ingredients, setIngredients] = useState([])
   const [rows, setRows] = useState([
-    { ingredientId: "", quantity: "" },
-    { ingredientId: "", quantity: "" },
+    { ingredientId: "", quantity: "" }
   ])
 
   const router = useRouter()
@@ -71,6 +70,15 @@ const CreateDishes = () => {
     setRows(newRows)
   }
 
+  const addRow = () => {
+    setRows([...rows, {ingredientId: "", quantity: ""}])
+  }
+
+  const deleteRow = (index) => {
+    const newRows = rows.filter((row, i) => i !== index)
+    setRows(newRows)
+  }
+
   if (loginUserEmail) {
     return (
       <div>
@@ -98,8 +106,12 @@ const CreateDishes = () => {
                 placeholder="使用量"
                 type="number"
               />
+              {rows.length > 1 && (
+                <button type="button" onClick={() => deleteRow(index)}>- 削除</button>
+              )}
             </div>
           ))}
+          <button type="button" onClick={addRow}>+ 食材を追加</button>
           <button>商品登録</button>
         </form>
       </div>
