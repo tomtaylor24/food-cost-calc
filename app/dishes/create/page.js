@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import useAuth from "@/app/utils/useAuth"
+import calcDishCost from "@/app/utils/calcCost"
 
 const CreateDishes = () => {
   const [name, setName] = useState("")
@@ -78,6 +79,15 @@ const CreateDishes = () => {
     setRows(newRows)
   }
 
+  const previewItems = rows
+  .filter((row) => row.ingredientId && row.quantity)
+  .map((row) => {
+    const ingredient = ingredients.find((ingredient) => ingredient.id === Number(row.ingredientId))
+    return {quantity: Number(row.quantity), ingredients: ingredient}
+  })
+
+  const previewCost = calcDishCost(previewItems)
+
   if (loginUserEmail) {
     return (
       <div>
@@ -113,6 +123,7 @@ const CreateDishes = () => {
           <button type="button" onClick={addRow}>+ 食材を追加</button>
           <button>商品登録</button>
         </form>
+        <p>この商品の原価:{Math.round(previewCost)}円</p>
       </div>
     )
   }

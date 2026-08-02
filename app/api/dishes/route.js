@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import supabase from "@/app/utils/database"
 import verifyToken from "@/app/utils/verifyToken"
+import calcDishCost from "@/app/utils/calcCost"
 
 export async function POST(request) {
   const reqBody = await request.json()
@@ -64,12 +65,16 @@ export async function GET(request) {
     try {
       const { data, error } = await supabase
         .from("dishes")
-        .select()
+        .select("*, dish_ingredients(quantity, ingredients(purchase_price, purchase_quantity))")
         .eq("user_id", payload.userId)
       if (error) throw new Error(error.message)
+        const dishesWithCost = data.map((dish) => {
+          const cost = calcDishCost(dish.dish_ingredients)
+          return {...dish, totalCost: cost}
+      })
       return NextResponse.json({
         message: "商品一覧の取得成功",
-        dishes: data
+        dishes: dishesWithCost
       }, { status: 200 })
     } catch (error) {
       return NextResponse.json({ message: `商品一覧の取得失敗: ${error.message}` }, { status: 500 })

@@ -31,7 +31,7 @@ const DishesList = () => {
         {dishes.map((dish) => (
           <li key={dish.id}>
             <Link href={`/dishes/${dish.id}`}>
-              {dish.name} {dish.selling_price}円
+              {dish.name} / 売価：{dish.selling_price}円 / 原価：{Math.round(dish.totalCost)}円{dish.selling_price && <span> / 原価率 {Math.round(dish.totalCost / dish.selling_price * 100)}%</span>}
             </Link>
           </li>
         ))}

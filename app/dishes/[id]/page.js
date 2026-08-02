@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import useAuth from "@/app/utils/useAuth"
+import calcDishCost, { calcItemCost } from "@/app/utils/calcCost"
 
 const UpdateDish = (context) => {
   const [name, setName] = useState("")
@@ -81,8 +82,8 @@ const UpdateDish = (context) => {
       <div>
         <h1>商品編集ページ</h1>
         <form onSubmit={handleSubmit}>
-          <input value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="商品名(例：唐揚げ)" required />
-          <input value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} type="number" placeholder="販売価格（例：1000）" required />円
+          商品名：<input value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="商品名(例：唐揚げ)" required />
+          販売価格：<input value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} type="number" placeholder="販売価格（例：1000）" required />円
           <button>更新</button>
           <button type="button" onClick={handleDelete}>削除</button>
         </form>
@@ -90,10 +91,14 @@ const UpdateDish = (context) => {
         <ul>
           {dishIngredients.map((item) => (
             <li key={item.id}>
-              {item.ingredients.name} {item.quantity}{item.ingredients.unit}
+              {item.ingredients.name} / 使用量：{item.quantity}{item.ingredients.unit} / 原価：{Math.round(calcItemCost(item))}円
             </li>
           ))}
         </ul>
+        <p>原価合計:{Math.round(calcDishCost(dishIngredients))}円</p>
+        {sellingPrice && (
+          <p>原価率:{Math.round(calcDishCost(dishIngredients) / Number(sellingPrice) * 100)}%</p>
+        )}
       </div>
     )
   }
