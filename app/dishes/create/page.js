@@ -7,8 +7,10 @@ const CreateDishes = () => {
   const [name, setName] = useState("")
   const [sellingPrice, setSellingPrice] = useState("")
   const [ingredients, setIngredients] = useState([])
-  const [ingredientId, setIngredientId] = useState("")
-  const [quantity, setQuantity] = useState("")
+  const [rows, setRows] = useState([
+    { ingredientId: "", quantity: "" },
+    { ingredientId: "", quantity: "" },
+  ])
 
   const router = useRouter()
   const loginUserEmail = useAuth()
@@ -21,14 +23,14 @@ const CreateDishes = () => {
         }
       })
       const jsonData = await response.json()
-      if(response.ok){
+      if (response.ok) {
         setIngredients(jsonData.ingredients)
-      }else{
+      } else {
         alert(jsonData.message)
       }
     }
     getIngredients()
-  }, []) 
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -43,34 +45,61 @@ const CreateDishes = () => {
         body: JSON.stringify({
           name: name,
           sellingPrice: sellingPrice,
-          ingredientId: ingredientId,
-          quantity: quantity
+          ingredientId: rows[0].ingredientId,
+          quantity: rows[0].quantity
         })
       })
       const jsonData = await response.json()
       alert(jsonData.message)
-      if(response.ok){
+      if (response.ok) {
         router.push("/dishes")
       }
     } catch {
       alert("商品登録に失敗しました")
     }
   }
-  if(loginUserEmail){
+
+  const changeIngredient = (index, value) => {
+    const newRows = [...rows]
+    newRows[index] = {...newRows[index], ingredientId: value}
+    setRows(newRows)
+  }
+
+  const changeQuantity = (index, value) => {
+    const newRows = [...rows]
+    newRows[index] = {...newRows[index], quantity: value}
+    setRows(newRows)
+  }
+
+  if (loginUserEmail) {
     return (
       <div>
         <form onSubmit={handleSubmit}>
-          <input value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="商品名（例：唐揚げ）" required/>
-          <input value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} type="number" placeholder="販売価格（例：800円）" required/>円
-          <select value={ingredientId} onChange={(e) => setIngredientId(e.target.value)} required>
-            <option value="">食材を選択</option>
-            {ingredients.map((ingredient) => (
-              <option value={ingredient.id} key={ingredient.id}>
-                {ingredient.name}({ingredient.unit})
-              </option>
-            ))}
-          </select>
-          <input value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="使用量" type="number"/>
+          <input value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="商品名（例：唐揚げ）" required />
+          <input value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} type="number" placeholder="販売価格（例：800円）" required />円
+          {rows.map((row, index) => (
+            <div key={index}>
+              <select
+                value={row.ingredientId}
+                onChange={(e) => changeIngredient(index, e.target.value)}
+                required
+              >
+                <option value="">食材を選択</option>
+                {ingredients.map((ingredient) => (
+                  <option value={ingredient.id} key={ingredient.id}>
+                    {ingredient.name}({ingredient.unit})
+                  </option>
+                ))}
+              </select>
+
+              <input
+                value={row.quantity}
+                onChange={(e) => changeQuantity(index, e.target.value)}
+                placeholder="使用量"
+                type="number"
+              />
+            </div>
+          ))}
           <button>商品登録</button>
         </form>
       </div>
