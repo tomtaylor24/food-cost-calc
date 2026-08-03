@@ -22,7 +22,8 @@ export async function GET(request, context) {
         dish: data
       }, { status: 200 })
     } catch (error) {
-      return NextResponse.json({ message: `商品詳細取得失敗: ${error.message}` }, { status: 404 })
+      console.log(error)
+      return NextResponse.json({ message: 商品詳細取得失敗 }, { status: 404 })
     }
   }
 }
@@ -98,7 +99,10 @@ export async function PUT(request, context) {
       }
       return NextResponse.json({ message: "商品編集成功" }, { status: 200 })
     } catch (error) {
-      return NextResponse.json({ message: `商品編集失敗: ${error.message}` }, { status: 500 })
+      if (error.message.includes("duplicate key")) {
+        return NextResponse.json({ message: "同じ名前の商品が既に登録されています" }, { status: 400 })
+      }
+      return NextResponse.json({ message: "商品編集に失敗しました" }, { status: 500 })
     }
   }
 }
@@ -118,7 +122,8 @@ export async function DELETE(request, context) {
       if (error) throw new Error(error.message)
       return NextResponse.json({ message: "商品削除成功" }, { status: 200 })
     } catch (error) {
-      return NextResponse.json({ message: `商品削除失敗: ${error.message}` }, { status: 500 })
+      console.log(error)
+      return NextResponse.json({ message: 商品削除失敗}, { status: 500 })
     }
   }
 }

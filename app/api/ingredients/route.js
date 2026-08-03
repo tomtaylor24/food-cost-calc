@@ -30,7 +30,10 @@ export async function POST(request) {
       if (error) throw new Error(error.message)
       return NextResponse.json({ message: "食材登録成功" }, { status: 201 })
     } catch (error) {
-      return NextResponse.json({ message: `食材登録失敗：${error}` }, { status: 500 })
+      if (error.message.includes("duplicate key")) {
+        return NextResponse.json({ message: "同じ名前の食材が既に登録されています" }, { status: 400 })
+      }
+      return NextResponse.json({ message: "食材食材に失敗しました" }, { status: 500 })
     }
   }
 }
@@ -54,7 +57,8 @@ export async function GET(request) {
         { status: 200 }
       )
     } catch (error) {
-      return NextResponse.json({ message: `食材一覧の取得失敗:${error}` }, { status: 500 })
+      console.log(error)
+      return NextResponse.json({ message: 食材一覧の取得失敗 }, { status: 500 })
     }
   }
 }

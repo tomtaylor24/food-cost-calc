@@ -14,7 +14,8 @@ export async function GET(request, context) {
       if (error) throw new Error(error.message)
       return NextResponse.json({ message: "食材詳細取得成功", ingredient: data }, { status: 200 })
     } catch (error) {
-      return NextResponse.json({ message: `食材詳細取得失敗: ${error.message}` }, { status: 404 })
+      console.log(error)
+      return NextResponse.json({ message: 食材詳細取得失敗 }, { status: 404 })
     }
   }
 }
@@ -28,9 +29,9 @@ export async function PUT(request, context) {
       const reqBody = await request.json()
       const params = await context.params
       const result = ingredientSchema.safeParse(reqBody)
-        if (!result.success) {
-          return NextResponse.json({ message: result.error.issues[0].message }, { status: 400 })
-        }
+      if (!result.success) {
+        return NextResponse.json({ message: result.error.issues[0].message }, { status: 400 })
+      }
       const { error } = await supabase.from("ingredients")
         .update({
           name: result.data.name,
@@ -43,7 +44,10 @@ export async function PUT(request, context) {
       if (error) throw new Error(error.message)
       return NextResponse.json({ message: "食材編集成功" }, { status: 200 })
     } catch (error) {
-      return NextResponse.json({ message: `食材編集失敗: ${error.message}` }, { status: 500 })
+      if (error.message.includes("duplicate key")) {
+        return NextResponse.json({ message: "同じ名前の食材が既に登録されています" }, { status: 400 })
+      }
+      return NextResponse.json({ message: "食材編集に失敗しました" }, { status: 500 })
     }
   }
 }
@@ -62,7 +66,8 @@ export async function DELETE(request, context) {
       if (error) throw new Error(error.message)
       return NextResponse.json({ message: "食材削除成功" }, { status: 200 })
     } catch (error) {
-      return NextResponse.json({ message: `食材削除失敗: ${error.message}` }, { status: 500 })
+      console.log(error)
+      return NextResponse.json({ message: 食材削除失敗}, { status: 500 })
     }
   }
 }

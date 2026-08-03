@@ -6,7 +6,7 @@ import calcDishCost from "@/app/utils/calcCost"
 export async function POST(request) {
   const reqBody = await request.json()
   const payload = await verifyToken(request)
-  
+
   if (!payload) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
   } else {
@@ -55,7 +55,10 @@ export async function POST(request) {
       }
       return NextResponse.json({ message: "商品登録成功" }, { status: 201 })
     } catch (error) {
-      return NextResponse.json({ message: `商品登録失敗: ${error.message}` }, { status: 500 })
+      if (error.message.includes("duplicate key")) {
+        return NextResponse.json({ message: "同じ名前の商品が既に登録されています" }, { status: 400 })
+      }
+      return NextResponse.json({ message: "商品登録に失敗しました" }, { status: 500 })
     }
   }
 }
@@ -81,7 +84,8 @@ export async function GET(request) {
         dishes: dishesWithCost
       }, { status: 200 })
     } catch (error) {
-      return NextResponse.json({ message: `商品一覧の取得失敗: ${error.message}` }, { status: 500 })
+      console.log(error)
+      return NextResponse.json({ message: 商品一覧の取得失敗}, { status: 500 })
     }
   }
 }
