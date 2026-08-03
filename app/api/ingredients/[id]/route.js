@@ -1,6 +1,7 @@
 import verifyToken from "@/app/utils/verifyToken";
 import { NextResponse } from "next/server";
 import supabase from "@/app/utils/database";
+import { ingredientSchema } from "@/app/utils/schemas";
 
 export async function GET(request, context) {
   const payload = await verifyToken(request)
@@ -26,12 +27,16 @@ export async function PUT(request, context) {
     try {
       const reqBody = await request.json()
       const params = await context.params
+      const result = ingredientSchema.safeParse(reqBody)
+        if (!result.success) {
+          return NextResponse.json({ message: result.error.issues[0].message }, { status: 400 })
+        }
       const { error } = await supabase.from("ingredients")
         .update({
-          name: reqBody.name,
-          purchase_price: Number(reqBody.purchasePrice),
-          purchase_quantity: Number(reqBody.purchaseQuantity),
-          unit: reqBody.unit
+          name: result.data.name,
+          purchase_price: result.data.purchasePrice,
+          purchase_quantity: result.data.purchaseQuantity,
+          unit: result.data.unit
         })
         .eq("id", params.id)
         .eq("user_id", payload.userId)

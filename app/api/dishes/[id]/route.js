@@ -17,7 +17,6 @@ export async function GET(request, context) {
         .eq("user_id", payload.userId)
         .single()
       if (error) throw new Error(error.message)
-      console.log(JSON.stringify(data, null, 2))
       return NextResponse.json({
         message: "商品詳細取得成功",
         dish: data
@@ -37,8 +36,12 @@ export async function PUT(request, context) {
     try {
       const reqBody = await request.json()
       const params = await context.params
+      const result = dishSchema.safeParse(reqBody)
+      if (!result.success) {
+        return NextResponse.json({ message: result.error.issues[0].message }, { status: 400 })
+      }
 
-      for (const row of reqBody.rows) {
+      for (const row of result.data.rows) {
         const { error: ingredientError } = await supabase
           .from("ingredients")
           .select("id")
@@ -65,8 +68,8 @@ export async function PUT(request, context) {
       const { error } = await supabase
         .from("dishes")
         .update({
-          name: reqBody.name,
-          selling_price: Number(reqBody.sellingPrice)
+          name: result.data.name,
+          selling_price: result.data.sellingPrice
         })
         .eq("id", params.id)
         .eq("user_id", payload.userId)
@@ -75,10 +78,10 @@ export async function PUT(request, context) {
         .from("dish_ingredients")
         .delete()
         .eq("dish_id", params.id)
-      const items = reqBody.rows.map((row) => ({
+      const items = result.data.rows.map((row) => ({
         dish_id: Number(params.id),
-        ingredient_id: Number(row.ingredientId),
-        quantity: Number(row.quantity)
+        ingredient_id: row.ingredientId,
+        quantity: row.quantity
       }))
       const { error: itemError } = await supabase
         .from("dish_ingredients")
