@@ -24,7 +24,7 @@ export async function GET(request, context) {
       }, { status: 200 })
     } catch (error) {
       console.log(error)
-      return NextResponse.json({ message: 商品詳細取得失敗 }, { status: 404 })
+      return NextResponse.json({ message: "商品詳細取得失敗" }, { status: 404 })
     }
   }
 }
@@ -125,7 +125,7 @@ export async function DELETE(request, context) {
       return NextResponse.json({ message: "商品削除成功" }, { status: 200 })
     } catch (error) {
       console.log(error)
-      return NextResponse.json({ message: 商品削除失敗}, { status: 500 })
+      return NextResponse.json({ message: "商品削除失敗"}, { status: 500 })
     }
   }
 }
