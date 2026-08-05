@@ -64,8 +64,17 @@ const IngredientsList = () => {
   if (ingredients.length === 0) {
     return (
       <div className="container">
-        <p>まだ食材が登録されていません</p>
-        <Link href="/ingredients/create">最初の食材を登録する</Link>
+        <div className="pageMain">
+          <div className="pageHeading">
+            <h1 className="pageTitle">食材一覧</h1>
+            <p className="pageDescription">登録済みの食材と仕入れ情報を確認できます</p>
+          </div>
+        </div>
+        <div className="emptyState">
+          <p className="emptyStateTitle">まだ食材が登録されていません</p>
+          <p className="emptyStateText">仕入れ値と仕入れ量を登録すると、<br className="pc" />商品の原価計算に使えるようになります。</p>
+          <Link href="/ingredients/create" className="btn emptyStateBtn">最初の食材を登録する</Link>
+        </div>
       </div>
     )
   }

@@ -65,8 +65,20 @@ const DishesList = () => {
   if (dishes.length === 0) {
     return (
       <div className="container">
-        <p>まだ商品が登録されていません</p>
-        <Link href="/dishes/create">最初の商品を登録する</Link>
+        <div className="pageMain">
+          <div className="pageHeading">
+            <h1 className="pageTitle">商品一覧</h1>
+            <p className="pageDescription">登録済みの商品と原価率を確認できます</p>
+          </div>
+        </div>
+        <div className="emptyState">
+          <p className="emptyStateTitle">まだ商品が登録されていません</p>
+          <p className="emptyStateText">
+            食材を組み合わせて商品を登録すると、<br className="pc" />原価と原価率が自動で計算されます。<br />
+            商品の登録には食材が必要です。まだの場合は<Link href="/ingredients/create" className="emptyStateLink">食材の登録</Link>から始めてください。
+          </p>
+          <Link href="/dishes/create" className="btn emptyStateBtn">最初の商品を登録する</Link>
+        </div>
       </div>
     )
   }

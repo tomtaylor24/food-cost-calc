@@ -173,6 +173,42 @@ dd {
   display: flex;
   align-items: center;
 }
+.emptyState{
+  margin-top: 32px;
+  padding: 72px 24px;
+  border: 1px dashed $border;
+  border-radius: 8px;
+  text-align: center;
+  @include sp{
+    margin-top: 20px;
+    padding: 48px 16px;
+  }
+}
+.emptyStateTitle{
+  color: $black;
+  font-size: 16px;
+  font-weight: bold;
+}
+.emptyStateText{
+  margin-top: 8px;
+  color: $text;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.emptyStateBtn{
+  width: fit-content;
+  margin: 24px auto 0;
+  padding: 12px 28px;
+}
+.emptyStateLink{
+  color: $main;
+  font-weight: bold;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  &:hover{
+    text-decoration: none;
+  }
+}
 .pageHeading{
   display: grid;
   gap: 6px;
