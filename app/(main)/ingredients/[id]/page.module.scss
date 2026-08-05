@@ -1,0 +1,39 @@
+@use "../../../styles/mixin" as *;
+@use "../../../styles/setting" as *;
+
+.form{
+  max-width: 480px;
+  @include sp{
+    padding-bottom: 120px;
+  }
+}
+
+.formRow{
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 16px;
+  @include sp{
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.quantity{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px;
+  gap: 10px;
+}
+
+.unitPrice{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid $border;
+  border-radius: 8px;
+  background: #FAFAFA;
+  color: $text;
+  span{
+    color: $black;
+    font-weight: bold;
+  }
+}

@@ -1,0 +1,116 @@
+"use client"
+import { useState, useEffect } from "react"
+import useAuth from "@/app/utils/useAuth"
+import Link from "next/link"
+import styles from "./page.module.scss"
+import toast from "react-hot-toast"
+
+
+const DishesList = () => {
+  const [dishes, setDishesList] = useState([])
+  const loginUserEmail = useAuth()
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const getDishes = async () => {
+      try {
+        const response = await fetch("/api/dishes", {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          }
+        })
+        const jsonData = await response.json()
+        if (response.ok) {
+          setDishesList(jsonData.dishes)
+        } else {
+          toast.error(jsonData.message)
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    getDishes()
+  }, [])
+
+  if (!loginUserEmail) return null
+
+  if (isLoading) {
+    return (
+      <div className="container">
+        <div className="pageMain">
+          <div className="pageHeading">
+            <h1 className="pageTitle">商品一覧</h1>
+            <p className="pageDescription">登録済みの商品と原価率を確認できます</p>
+          </div>
+          <div className="pageBtns">
+            <Link href="/dishes/create" className="btn">+ 新しい商品を登録</Link>
+          </div>
+        </div>
+        <ul className={styles.table}>
+          {[...Array(5)].map((_, i) => (
+            <li className={styles.tableItem} key={i}>
+              <div className={styles.skeletonInner}>
+                <div><span /></div>
+                <div><span /></div>
+                <div><span /></div>
+                <div><span /></div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  if (dishes.length === 0) {
+    return (
+      <div className="container">
+        <p>まだ商品が登録されていません</p>
+        <Link href="/dishes/create">最初の商品を登録する</Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container">
+      <div className="pageMain">
+        <div className="pageHeading">
+          <h1 className="pageTitle">商品一覧</h1>
+          <p className="pageDescription">登録済みの商品と原価率を確認できます</p>
+        </div>
+        <div className="pageBtns">
+          <Link href="/dishes/create" className="btn">+ 新しい商品を登録</Link>
+        </div>
+      </div>
+      <ul className={styles.table}>
+        <li className={`${styles.tableItem} ${styles.title}`}>
+          <div>料理名</div>
+          <div>売価</div>
+          <div>原価</div>
+          <div>原価率</div>
+        </li>
+        {dishes.map((dish) => {
+          const costRate = dish.selling_price
+            ? Math.round(dish.totalCost / dish.selling_price * 100)
+            : null
+          return (
+            <li className={styles.tableItem} key={dish.id}>
+              <Link href={`/dishes/${dish.id}`}>
+                <div>{dish.name}</div>
+                <div>{dish.selling_price ? `￥${dish.selling_price.toLocaleString()}` : "—"}</div>
+                <div>￥{Math.round(dish.totalCost).toLocaleString()}</div>
+                <div>
+                  {costRate !== null && (
+                    <span className={costRate >= 30 ? styles.high : undefined}>{costRate}%</span>
+                  )}
+                </div>
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+export default DishesList

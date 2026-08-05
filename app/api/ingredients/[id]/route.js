@@ -15,7 +15,7 @@ export async function GET(request, context) {
       return NextResponse.json({ message: "食材詳細取得成功", ingredient: data }, { status: 200 })
     } catch (error) {
       console.log(error)
-      return NextResponse.json({ message: 食材詳細取得失敗 }, { status: 404 })
+      return NextResponse.json({ message: "食材詳細取得失敗" }, { status: 404 })
     }
   }
 }
@@ -67,7 +67,7 @@ export async function DELETE(request, context) {
       return NextResponse.json({ message: "食材削除成功" }, { status: 200 })
     } catch (error) {
       console.log(error)
-      return NextResponse.json({ message: 食材削除失敗}, { status: 500 })
+      return NextResponse.json({ message: "食材削除失敗"}, { status: 500 })
     }
   }
 }

@@ -1,0 +1,78 @@
+@use "../../styles/mixin" as *;
+@use "../../styles/setting" as *;
+
+.table{
+  margin-top: 32px;
+  @include sp{
+    margin-top: 20px;
+  }
+}
+
+.tableItem{
+  color: $text;
+  font-weight: 500;
+  &:not(:first-child){
+    border-top: 1px solid $border;
+  }
+  &.title,
+  a,
+  .skeletonInner{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(2, 110px);
+    align-items: center;
+    gap: 12px;
+    padding: 20px 12px;
+    div + div{
+      text-align: right;
+    }
+  }
+  .skeletonInner{
+    font-size: 14px;
+    @include sp{
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 4px;
+      padding: 14px 4px;
+    }
+  }
+  &.title{
+    padding: 10px 12px;
+    @include sp{
+      display: none;
+    }
+  }
+  a{
+    font-size: 14px;
+    @include sp{
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 4px;
+      padding: 14px 4px;
+      div:nth-child(3)::before{
+        content: "/ ";
+      }
+    }
+    div:first-child{
+      color: $black;
+      font-weight: bold;
+    }
+    &:hover{
+      background: #FAFAFA;
+    }
+  }
+}
+
+.skeletonInner{
+  span{
+    display: block;
+    height: 1em;
+    border-radius: 4px;
+    background: $border;
+    animation: skeletonPulse 1.4s ease-in-out infinite;
+  }
+  div:first-child span{
+    width: 55%;
+  }
+  div + div span{
+    width: 70%;
+    margin-left: auto;
+  }
+}

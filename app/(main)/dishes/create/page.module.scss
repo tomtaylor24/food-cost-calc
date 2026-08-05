@@ -1,0 +1,78 @@
+@use "../../../styles/mixin" as *;
+@use "../../../styles/setting" as *;
+
+.formRow{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 16px;
+  @include sp{
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.rows{
+  display: grid;
+  gap: 10px;
+}
+
+.rowsHead,
+.row{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px 110px 32px;
+  align-items: center;
+  gap: 10px;
+  @include sp{
+    grid-template-columns: minmax(0, 1fr) 110px 28px;
+  }
+}
+
+.unitCost{
+  color: $text;
+  @include sp{
+    grid-column: 1 / 4;
+    grid-row: 2;
+    &:empty{
+      display: none;
+    }
+  }
+}
+
+.rowsHead{
+  color: $text;
+}
+
+.rowsLabel{
+  color: $text;
+}
+
+.addBtn{
+  justify-self: start;
+  padding: 9px 14px;
+  border: 1px solid $border;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.deleteBtn{
+  color: $text;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.preview{
+  color: $text;
+  span{
+    color: $black;
+    font-size: 15px;
+    font-weight: bold;
+  }
+}
+
+.formBtns{
+  padding-top: 24px;
+  border-top: 1px solid $border;
+  @include sp{
+    padding-top: 12px;
+  }
+}

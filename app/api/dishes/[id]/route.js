@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import supabase from "@/app/utils/database"
 import verifyToken from "@/app/utils/verifyToken"
+import { dishSchema } from "@/app/utils/schemas"
 
 export async function GET(request, context) {
   const payload = await verifyToken(request)
@@ -99,6 +100,7 @@ export async function PUT(request, context) {
       }
       return NextResponse.json({ message: "商品編集成功" }, { status: 200 })
     } catch (error) {
+      console.log(error)
       if (error.message.includes("duplicate key")) {
         return NextResponse.json({ message: "同じ名前の商品が既に登録されています" }, { status: 400 })
       }

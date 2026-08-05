@@ -1,0 +1,56 @@
+@use "../styles/mixin" as *;
+@use "../styles/setting" as *;
+
+.sideBar{
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100svh;
+  overflow-y: auto;
+  padding: 20px 12px;
+  border-right: 1px solid $border;
+  @include sp{
+    position: static;
+    height: auto;
+    overflow-y: visible;
+    padding: 16px 16px 0;
+    border-right: none;
+    border-bottom: 1px solid $border;
+  }
+  .title{
+    font-size: 14px;
+    font-weight: bold;
+  }
+  ul{
+    margin-top: 24px;
+    display: grid;
+    @include sp{
+      margin-top: 12px;
+      grid-auto-flow: column;
+      justify-content: start;
+      overflow-x: auto;
+    }
+    li{
+      a{
+        display: block;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        @include sp{
+          padding: 10px 14px;
+          border-radius: 0;
+          border-bottom: 2px solid transparent;
+          white-space: nowrap;
+        }
+        &.active{
+            background: #F0EFFD;
+            color: $main;
+            @include sp{
+              background: none;
+              border-bottom-color: $main;
+            }
+        }
+      }
+    }
+  }
+}
