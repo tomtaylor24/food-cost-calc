@@ -58,7 +58,7 @@ export async function GET(request) {
       )
     } catch (error) {
       console.log(error)
-      return NextResponse.json({ message: 食材一覧の取得失敗 }, { status: 500 })
+      return NextResponse.json({ message: "食材一覧の取得失敗" }, { status: 500 })
     }
   }
 }
