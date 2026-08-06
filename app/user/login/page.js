@@ -25,8 +25,8 @@ const Login = () => {
         })
       })
       const jsonData = await response.json()
-      localStorage.setItem("token", jsonData.token)
       if(response.ok){
+        localStorage.setItem("token", jsonData.token)
         toast.success(jsonData.message)
         router.push("/")
       }else{
@@ -34,7 +34,7 @@ const Login = () => {
       }
     }
     catch {
-      toast.error(jsonData.message)
+      toast.error("通信に失敗しました")
     }
   }
 
@@ -45,15 +45,15 @@ const Login = () => {
         <p className="authText">メールアドレスとパスワードを入力してください</p>
         <form className="authForm" onSubmit={handleSubmit}>
           <dl>
-            <dt>メールアドレス</dt>
+            <dt><label htmlFor="login-email">メールアドレス</label></dt>
             <dd>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} type="text" name="email" placeholder="email@example.com" required />
+              <input id="login-email" value={email} onChange={(e) => setEmail(e.target.value)} type="email" name="email" placeholder="email@example.com" autoComplete="username" required />
             </dd>
           </dl>
           <dl>
-            <dt>パスワード</dt>
+            <dt><label htmlFor="login-password">パスワード</label></dt>
             <dd>
-              <input value={password} onChange={(e) => setPassword(e.target.value)} type="text" name="password" placeholder="********" required />
+              <input id="login-password" value={password} onChange={(e) => setPassword(e.target.value)} type="password" name="password" autoComplete="current-password" placeholder="********" required />
             </dd>
           </dl>
           <button className="btn">ログイン</button>

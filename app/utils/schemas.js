@@ -17,3 +17,8 @@ export const dishSchema = z.object({
     })
   ).min(1, "食材を1つ以上選んでください")
 })
+
+export const userSchema = z.object({
+  email: z.string().email("メールアドレスの形式が正しくありません"),
+  password: z.string().min(8, "パスワードは8文字以上にしてください")
+})

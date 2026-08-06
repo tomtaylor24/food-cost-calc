@@ -1,38 +1,44 @@
 import { NextResponse } from "next/server";
 import supabase from "@/app/utils/database";
-import { SignJWT } from "jose"; // トークンを発行するためのもの
+import { SignJWT } from "jose"; 
 import bcrypt from "bcryptjs";
+import { userSchema } from "@/app/utils/schemas";
+
 
 export async function POST(request) {
-  const reqBody = await request.json() // メールアドレス取得のため
-  try{ //↓すでにユーザー登録済みかを調べるための処理
-    const {data, error} = await supabase.from("users") // テーブルの指定
-                  .select() // テーブルすべてのデータを取り出す
-                  .eq("email", reqBody.email) // テーブルのemailがreqBodyのemailと等しい
-                  .single() // オブジェクトで返す
-    if(!error){ // エラーでない = ユーザー登録済みの場合
-      if(await bcrypt.compare(reqBody.password, data.password_hash)){ // パスワードが合っている場合
+  const reqBody = await request.json() 
+  try{ 
+    const result = userSchema.safeParse(reqBody)
+      if (!result.success) {
+        return NextResponse.json({ message: result.error.issues[0].message }, { status: 400 })
+      }
+    const {data, error} = await supabase.from("users") 
+                  .select() 
+                  .eq("email", result.data.email) 
+                  .single() 
+    if(!error){ 
+      if(await bcrypt.compare(result.data.password, data.password_hash)){ 
         const secretKey = new TextEncoder().encode(process.env.JWT_SECRET)
-        //↑TextEncoder().encode(文字) = 文字列をシークレットキーの形式に変換↑
-        const payload = { // payload=トークンのデータ、 一般的にユーザー名やメールアドレス
+        
+        const payload = { 
           userId: data.id,
-          email: reqBody.email,
+          email: result.data.email,
         }
-        const token = await new SignJWT(payload) //トークンに入れる中身、この場合はpayload=email
-                            .setProtectedHeader({alg: "HS256"}) // 署名の方式
-                            .setExpirationTime("3d") // トークンお有効期限
-                            .sign(secretKey) // secretKeyでsign(署名)
+        const token = await new SignJWT(payload) 
+                            .setProtectedHeader({alg: "HS256"}) 
+                            .setExpirationTime("3d")
+                            .sign(secretKey) 
         return NextResponse.json({
                                   message: "ログイン成功",
                                   token: token
                                 })
-      }else{ // パスワードが間違えている場合
-        return NextResponse.json({message: "ログイン失敗：メールアドレスまたはパスワードが違います"}, {status: 401}) // 401 = 認証失敗
+      }else{ 
+        return NextResponse.json({message: "ログイン失敗：メールアドレスまたはパスワードが違います"}, {status: 401})
       }
-    }else{ // エラー = ユーザー登録をしていない
-      return NextResponse.json({message: "ログイン失敗：メールアドレスまたはパスワードが違います"}, {status: 401}) // 401 = 認証失敗
+    }else{
+      return NextResponse.json({message: "ログイン失敗：メールアドレスまたはパスワードが違います"}, {status: 401})
     }
   }catch{
-    return NextResponse.json({message: "ログイン失敗"}, {status: 500}) // 500 = サーバーのエラー
+    return NextResponse.json({message: "ログイン失敗"}, {status: 500})
   }
 }

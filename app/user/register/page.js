@@ -7,7 +7,6 @@ import toast from "react-hot-toast"
 
 
 const Register = () => {
-  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
@@ -23,7 +22,6 @@ const Register = () => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          name: name,
           email: email,
           password: password
         })
@@ -31,12 +29,12 @@ const Register = () => {
       const jsonData = await response.json()
       if(response.ok){
         toast.success(jsonData.message)
-        router.push("/")
+        router.push("/user/login")
       }else{
         toast.error(jsonData.message)
       }
     } catch {
-      toast.error(jsonData.message)
+      toast.error("通信に失敗しました")
     }
   }
 
@@ -47,21 +45,15 @@ const Register = () => {
         <p className="authText">無料でアカウントを作成できます</p>
         <form className="authForm" onSubmit={handleSubmit}>
           <dl>
-            <dt>名前</dt>
+            <dt><label htmlFor="register-email">メールアドレス</label></dt>
             <dd>
-              <input value={name} onChange={(e) => setName(e.target.value)} type="text" name="name" placeholder="田中 太郎" required />
+              <input id="register-email" value={email} onChange={(e) => setEmail(e.target.value)} type="email" name="email" placeholder="email@example.com" autoComplete="email" required />
             </dd>
           </dl>
           <dl>
-            <dt>メールアドレス</dt>
+            <dt><label htmlFor="register-password">パスワード</label></dt>
             <dd>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} type="text" name="email" placeholder="email@example.com" required />
-            </dd>
-          </dl>
-          <dl>
-            <dt>パスワード</dt>
-            <dd>
-              <input value={password} onChange={(e) => setPassword(e.target.value)} type="text" name="password" placeholder="********" required />
+              <input id="register-password" value={password} onChange={(e) => setPassword(e.target.value)} type="password" name="password" placeholder="********" autoComplete="new-password" required />
             </dd>
           </dl>
           <button className="btn">登録する</button>
