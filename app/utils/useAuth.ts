@@ -12,11 +12,17 @@ const useAuth = () => {
     
       if(!token){
         router.push("/user/login")
+        return
       }
+
     
       try{
         const payload = decodeJwt(token)
-        setLoginUserEmail(payload.email)
+        if (typeof payload.email === "string"){
+          setLoginUserEmail(payload.email)
+        }else{
+          router.push("/user/login")
+        }
       }catch(error){
         router.push("/user/login")
       }
