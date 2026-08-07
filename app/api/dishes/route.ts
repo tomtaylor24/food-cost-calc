@@ -4,7 +4,7 @@ import verifyToken from "@/app/utils/verifyToken"
 import calcDishCost from "@/app/utils/calcCost"
 import { dishSchema } from "@/app/utils/schemas"
 
-export async function POST(request) {
+export async function POST(request: Request) {
   const reqBody = await request.json()
   const payload = await verifyToken(request)
 
@@ -20,7 +20,7 @@ export async function POST(request) {
         const { error: ingredientError } = await supabase
           .from("ingredients")
           .select("id")
-          .eq("id", Number(row.ingredientId))
+          .eq("id", row.ingredientId)
           .eq("user_id", payload.userId)
           .single()
 
@@ -43,8 +43,8 @@ export async function POST(request) {
 
       const items = result.data.rows.map((row) => ({
         dish_id: data.id,
-        ingredient_id: Number(row.ingredientId),
-        quantity: Number(row.quantity)
+        ingredient_id: row.ingredientId,
+        quantity: row.quantity
       }))
 
       const { error: itemError } = await supabase
@@ -56,12 +56,13 @@ export async function POST(request) {
       }
       return NextResponse.json({ message: "商品登録成功" }, { status: 201 })
     } catch (error) {
-      return NextResponse.json({ message: `商品登録失敗: ${error.message}` }, { status: 500 })
+      const errorMessage = error instanceof Error ? error.message : "不明なエラーです"
+      return NextResponse.json({ message: `商品登録失敗: ${errorMessage}` }, { status: 500 })
     }
   }
 }
 
-export async function GET(request) {
+export async function GET(request:Request) {
   const payload = await verifyToken(request)
 
   if (!payload) {
@@ -82,7 +83,8 @@ export async function GET(request) {
         dishes: dishesWithCost
       }, { status: 200 })
     } catch (error) {
-      return NextResponse.json({ message: `商品一覧の取得失敗: ${error.message}` }, { status: 500 })
+      const errorMessage = error instanceof Error ? error.message : "不明なエラーです"
+      return NextResponse.json({ message: `商品一覧の取得失敗: ${errorMessage}` }, { status: 500 })
     }
   }
 }

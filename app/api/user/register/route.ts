@@ -3,7 +3,7 @@ import supabase from "@/app/utils/database";
 import bcrypt from "bcryptjs";
 import { userSchema } from "@/app/utils/schemas";
 
-export async function POST(request) {
+export async function POST(request: Request) {
   const reqBody = await request.json()
   try {
     const result = userSchema.safeParse(reqBody)
@@ -20,7 +20,8 @@ export async function POST(request) {
     return NextResponse.json({ message: "ユーザー登録成功" }, { status: 201 })
   } catch (error) {
     console.log(error)
-    if (error.message.includes("duplicate key")) {
+    const errorMessage = error instanceof Error ? error.message : "不明なエラー"
+    if (errorMessage.includes("duplicate key")) {
       return NextResponse.json({ message: "このメールアドレスはすでに登録されています" }, { status: 400 })
     }
     return NextResponse.json({ message: "ユーザー登録に失敗しました" }, { status: 500 })

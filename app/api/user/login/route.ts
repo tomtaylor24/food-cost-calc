@@ -4,8 +4,14 @@ import { SignJWT } from "jose";
 import bcrypt from "bcryptjs";
 import { userSchema } from "@/app/utils/schemas";
 
+const jwtSecret = process.env.JWT_SECRET
 
-export async function POST(request) {
+if(!jwtSecret) {
+  throw new Error("JWT_SECRETが.envに設定されていません")
+}
+
+
+export async function POST(request: Request) {
   const reqBody = await request.json() 
   try{ 
     const result = userSchema.safeParse(reqBody)
@@ -18,7 +24,7 @@ export async function POST(request) {
                   .single() 
     if(!error){ 
       if(await bcrypt.compare(result.data.password, data.password_hash)){ 
-        const secretKey = new TextEncoder().encode(process.env.JWT_SECRET)
+        const secretKey = new TextEncoder().encode(jwtSecret)
         
         const payload = { 
           userId: data.id,

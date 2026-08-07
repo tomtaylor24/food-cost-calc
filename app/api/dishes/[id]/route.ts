@@ -3,7 +3,11 @@ import supabase from "@/app/utils/database"
 import verifyToken from "@/app/utils/verifyToken"
 import { dishSchema } from "@/app/utils/schemas"
 
-export async function GET(request, context) {
+type Context = {
+  params: Promise<{id: string}>
+}
+
+export async function GET(request: Request, context: Context) {
   const payload = await verifyToken(request)
 
   if (!payload) {
@@ -29,7 +33,7 @@ export async function GET(request, context) {
   }
 }
 
-export async function PUT(request, context) {
+export async function PUT(request: Request, context: Context) {
   const payload = await verifyToken(request)
 
   if (!payload) {
@@ -47,7 +51,7 @@ export async function PUT(request, context) {
         const { error: ingredientError } = await supabase
           .from("ingredients")
           .select("id")
-          .eq("id", Number(row.ingredientId))
+          .eq("id", row.ingredientId)
           .eq("user_id", payload.userId)
           .single()
 
@@ -101,7 +105,8 @@ export async function PUT(request, context) {
       return NextResponse.json({ message: "商品編集成功" }, { status: 200 })
     } catch (error) {
       console.log(error)
-      if (error.message.includes("duplicate key")) {
+      const errorMessage = error instanceof Error ? error.message : "不明なエラーです"
+      if (errorMessage.includes("duplicate key")) {
         return NextResponse.json({ message: "同じ名前の商品が既に登録されています" }, { status: 400 })
       }
       return NextResponse.json({ message: "商品編集に失敗しました" }, { status: 500 })
@@ -109,7 +114,7 @@ export async function PUT(request, context) {
   }
 }
 
-export async function DELETE(request, context) {
+export async function DELETE(request: Request, context: Context) {
   const payload = await verifyToken(request)
   if (!payload) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })

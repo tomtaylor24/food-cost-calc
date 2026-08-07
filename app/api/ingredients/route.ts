@@ -3,15 +3,15 @@ import supabase from "@/app/utils/database";
 import verifyToken from "@/app/utils/verifyToken";
 import { ingredientSchema } from "@/app/utils/schemas";
 
-export async function POST(request) {
+export async function POST(request: Request) {
   const reqBody = await request.json()
   const payload = await verifyToken(request)
-  const result = ingredientSchema.safeParse(reqBody)
-
+  
   if (!payload) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
   } else {
     try {
+      const result = ingredientSchema.safeParse(reqBody)
       if (!result.success) {
         return NextResponse.json(
           { message: result.error.issues[0].message },
@@ -30,16 +30,17 @@ export async function POST(request) {
       if (error) throw new Error(error.message)
       return NextResponse.json({ message: "食材登録成功" }, { status: 201 })
     } catch (error) {
-      if (error.message.includes("duplicate key")) {
+      const errorMessage = error instanceof Error ? error.message : "不明なエラーです"
+      if (errorMessage.includes("duplicate key")) {
         return NextResponse.json({ message: "同じ名前の食材が既に登録されています" }, { status: 400 })
       }
-      return NextResponse.json({ message: "食材食材に失敗しました" }, { status: 500 })
+      return NextResponse.json({ message: "食材登録に失敗しました" }, { status: 500 })
     }
   }
 }
 
 
-export async function GET(request) {
+export async function GET(request: Request) {
   const payload = await verifyToken(request)
   if (!payload) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })

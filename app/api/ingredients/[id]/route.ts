@@ -3,7 +3,11 @@ import { NextResponse } from "next/server";
 import supabase from "@/app/utils/database";
 import { ingredientSchema } from "@/app/utils/schemas";
 
-export async function GET(request, context) {
+type Context = {
+  params: Promise<{id: string}>
+}
+
+export async function GET(request: Request, context: Context) {
   const payload = await verifyToken(request)
   if (!payload) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
@@ -20,7 +24,7 @@ export async function GET(request, context) {
   }
 }
 
-export async function PUT(request, context) {
+export async function PUT(request: Request, context: Context) {
   const payload = await verifyToken(request)
   if (!payload) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
@@ -44,7 +48,8 @@ export async function PUT(request, context) {
       if (error) throw new Error(error.message)
       return NextResponse.json({ message: "食材編集成功" }, { status: 200 })
     } catch (error) {
-      if (error.message.includes("duplicate key")) {
+      const errorMessage = error instanceof Error ? error.message : "不明なエラーです"
+      if (errorMessage.includes("duplicate key")) {
         return NextResponse.json({ message: "同じ名前の食材が既に登録されています" }, { status: 400 })
       }
       return NextResponse.json({ message: "食材編集に失敗しました" }, { status: 500 })
@@ -52,7 +57,7 @@ export async function PUT(request, context) {
   }
 }
 
-export async function DELETE(request, context) {
+export async function DELETE(request: Request, context: Context) {
   const payload = await verifyToken(request)
   if (!payload) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
