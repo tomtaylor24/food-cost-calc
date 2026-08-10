@@ -11,7 +11,7 @@ import type { RecipeRow } from "@/app/types"
 import { SubmitEvent } from "react"
 
 type Props = {
-  params: Promise<{id: string}>
+  params: Promise<{ id: string }>
 }
 
 const UpdateDish = (context: Props) => {
@@ -25,26 +25,32 @@ const UpdateDish = (context: Props) => {
 
   useEffect(() => {
     const getDish = async () => {
-      const params = await context.params
-      const response = await fetch(`/api/dishes/${params.id}`, {
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+      try{
+        const params = await context.params
+        const response = await fetch(`/api/dishes/${params.id}`, {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          }
+        })
+        const jsonData = await response.json()
+        const singleItem = jsonData.dish as DishDetail
+        if (response.ok) {
+          setName(singleItem.name)
+          setSellingPrice(String(singleItem.selling_price ?? ""))
+          setRows(singleItem.dish_ingredients.map((item) => ({
+            ingredientId: String(item.ingredient_id),
+            quantity: String(item.quantity),
+          })))
+        } else {
+          toast.error(jsonData.message)
+          router.push("/")
         }
-      })
-      const jsonData = await response.json()
-      const singleItem = await jsonData.dish as DishDetail
-      if (response.ok) {
-        setName(singleItem.name)
-        setSellingPrice(String(singleItem.selling_price ?? ""))
-        setRows(singleItem.dish_ingredients.map((item) => ({
-          ingredientId: String(item.ingredient_id),
-          quantity: String(item.quantity),
-
-        })))
+      }catch{
+        toast.error("通信に失敗しました")
       }
     }
     getDish()
-  }, [context])
+  }, [context, router])
 
   useEffect(() => {
     const getIngredients = async () => {
@@ -84,7 +90,7 @@ const UpdateDish = (context: Props) => {
       if (response.ok) {
         toast.success(jsonData.message)
         router.push("/")
-      } else{
+      } else {
         toast.error(jsonData.message)
       }
     } catch {
@@ -106,7 +112,7 @@ const UpdateDish = (context: Props) => {
       if (response.ok) {
         toast.success(jsonData.message)
         router.push("/")
-      }else{
+      } else {
         toast.error(jsonData.message)
       }
     } catch {
@@ -135,13 +141,13 @@ const UpdateDish = (context: Props) => {
     setRows(newRows)
   }
 
-const previewItems = rows
-  .map((row) => {
-    const ingredient = ingredients.find((ing) => ing.id === Number(row.ingredientId))
-    if (!ingredient || !row.quantity) return null
-    return { quantity: Number(row.quantity), ingredients: ingredient }
-  })
-  .filter((item) => item !== null)
+  const previewItems = rows
+    .map((row) => {
+      const ingredient = ingredients.find((ing) => ing.id === Number(row.ingredientId))
+      if (!ingredient || !row.quantity) return null
+      return { quantity: Number(row.quantity), ingredients: ingredient }
+    })
+    .filter((item) => item !== null)
 
   const totalCost = Math.round(calcDishCost(previewItems))
   const costRate = sellingPrice ? Math.round(totalCost / Number(sellingPrice) * 100) : null

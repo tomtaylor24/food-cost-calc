@@ -9,7 +9,7 @@ import { Ingredient } from "@/app/types"
 import { SubmitEvent } from "react"
 
 type Props = {
-  params: Promise<{id: string}>
+  params: Promise<{ id: string }>
 }
 
 const UpdateIngredient = (context: Props) => {
@@ -24,23 +24,30 @@ const UpdateIngredient = (context: Props) => {
 
   useEffect(() => {
     const getIngredient = async () => {
-      const params = await context.params
-      const response = await fetch(`/api/ingredients/${params.id}`, {
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+      try{
+        const params = await context.params
+        const response = await fetch(`/api/ingredients/${params.id}`, {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          }
+        })
+        const jsonData = await response.json()
+        const singleItem = jsonData.ingredient as Ingredient
+        if (response.ok) {
+          setName(singleItem.name)
+          setPurchasePrice(String(singleItem.purchase_price))
+          setPurchaseQuantity(String(singleItem.purchase_quantity))
+          setUnit(singleItem.unit)
+        } else {
+          toast.error(jsonData.message)
+          router.push("/ingredients")
         }
-      })
-      const jsonData = await response.json()
-      const singleItem = jsonData.ingredient as Ingredient
-      if (response.ok) {
-        setName(singleItem.name)
-        setPurchasePrice(String(singleItem.purchase_price))
-        setPurchaseQuantity(String(singleItem.purchase_quantity))
-        setUnit(singleItem.unit)
+      }catch{
+        toast.error("通信に失敗しました")
       }
     }
     getIngredient()
-  }, [context])
+  }, [context, router])
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -64,7 +71,7 @@ const UpdateIngredient = (context: Props) => {
       if (response.ok) {
         toast.success(jsonData.message)
         router.push("/ingredients")
-      }else{
+      } else {
         toast.error(jsonData.message)
       }
     } catch {
@@ -86,7 +93,7 @@ const UpdateIngredient = (context: Props) => {
       if (response.ok) {
         toast.success(jsonData.message)
         router.push("/ingredients")
-      }else{
+      } else {
         toast.error(jsonData.message)
       }
     } catch {

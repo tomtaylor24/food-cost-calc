@@ -209,6 +209,59 @@ dd {
     text-decoration: none;
   }
 }
+.errorState{
+  margin-top: 32px;
+  padding: 64px 24px;
+  border: 1px solid rgba($red, .2);
+  border-radius: 8px;
+  background: rgba($red, .025);
+  text-align: center;
+  @include sp{
+    margin-top: 20px;
+    padding: 44px 16px;
+  }
+}
+.errorStateIcon{
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: rgba($red, .08);
+  color: $red;
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1;
+}
+.errorStateTitle{
+  color: $black;
+  font-size: 16px;
+  font-weight: bold;
+}
+.errorStateText{
+  margin-top: 8px;
+  color: $text;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.errorStateBtn{
+  width: fit-content;
+  margin: 24px auto 0;
+  padding: 12px 28px;
+  border: 1px solid $border;
+  border-radius: 8px;
+  background: $white;
+  color: $black;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: border-color .2s, color .2s;
+  &:hover{
+    border-color: $main;
+    color: $main;
+  }
+}
 .pageHeading{
   display: grid;
   gap: 6px;

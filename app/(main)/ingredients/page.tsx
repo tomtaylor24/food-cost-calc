@@ -11,6 +11,7 @@ const IngredientsList = () => {
   const [ingredients, setIngredientsList] = useState<Ingredient[]>([])
   const loginUserEmail = useAuth()
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     const getIngredients = async () => {
@@ -26,9 +27,10 @@ const IngredientsList = () => {
         } else {
           toast.error(jsonData.message)
         }
-      } catch{
+      } catch {
+        setLoadError(true)
         toast.error("通信に失敗しました")
-      }finally {
+      } finally {
         setIsLoading(false)
       }
     }
@@ -60,6 +62,25 @@ const IngredientsList = () => {
             </li>
           ))}
         </ul>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="container">
+        <div className="pageMain">
+          <div className="pageHeading">
+            <h1 className="pageTitle">食材一覧</h1>
+            <p className="pageDescription">登録済みの食材と仕入れ情報を確認できます</p>
+          </div>
+        </div>
+        <div className="errorState">
+          <p className="errorStateIcon" aria-hidden="true">!</p>
+          <p className="errorStateTitle">読み込みに失敗しました</p>
+          <p className="errorStateText">通信環境を確認して、もう一度お試しください。</p>
+          <button type="button" className="errorStateBtn" onClick={() => location.reload()}>再読み込み</button>
+        </div>
       </div>
     )
   }

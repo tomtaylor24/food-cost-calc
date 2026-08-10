@@ -7,23 +7,28 @@ const useAuth = () => {
   const router = useRouter()
 
   useEffect(() => {
-    const checkToken = async() => {
+    const checkToken = async () => {
       const token = localStorage.getItem("token")
-    
-      if(!token){
+
+      if (!token) {
         router.push("/user/login")
         return
       }
 
-    
-      try{
+
+      try {
         const payload = decodeJwt(token)
-        if (typeof payload.email === "string"){
+        if (typeof payload.exp !== "number" || payload.exp * 1000 < Date.now()) {
+          localStorage.removeItem("token")
+          router.push("/user/login")
+          return
+        }
+        if (typeof payload.email === "string") {
           setLoginUserEmail(payload.email)
-        }else{
+        } else {
           router.push("/user/login")
         }
-      }catch(error){
+      } catch{
         router.push("/user/login")
       }
     }
