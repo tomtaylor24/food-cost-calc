@@ -6,41 +6,20 @@ import useAuth from "@/app/utils/useAuth"
 import calcDishCost from "@/app/utils/calcCost"
 import styles from "./page.module.scss"
 import toast from "react-hot-toast"
+import { SubmitEvent } from "react"
+import type { Ingredient } from "@/app/types"
 
 
-const UpdateDish = (context) => {
+const CreateDishes = () => {
   const [name, setName] = useState("")
   const [sellingPrice, setSellingPrice] = useState("")
-  const [dishIngredients, setDishIngredients] = useState([])
-  const [ingredients, setIngredients] = useState([])
-  const [rows, setRows] = useState([])
+  const [ingredients, setIngredients] = useState<Ingredient[]>([])
+  const [rows, setRows] = useState([
+    { ingredientId: "", quantity: "" }
+  ])
 
   const router = useRouter()
   const loginUserEmail = useAuth()
-
-  useEffect(() => {
-    const getDish = async () => {
-      const params = await context.params
-      const response = await fetch(`/api/dishes/${params.id}`, {
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        }
-      })
-      const jsonData = await response.json()
-      const singleItem = await jsonData.dish
-      if (response.ok) {
-        setName(singleItem.name)
-        setSellingPrice(singleItem.selling_price)
-        setDishIngredients(singleItem.dish_ingredients)
-        setRows(singleItem.dish_ingredients.map((item) => ({
-          ingredientId: String(item.ingredient_id),
-          quantity: String(item.quantity),
-
-        })))
-      }
-    }
-    getDish()
-  }, [context])
 
   useEffect(() => {
     const getIngredients = async () => {
@@ -59,12 +38,11 @@ const UpdateDish = (context) => {
     getIngredients()
   }, [])
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
-      const params = await context.params
-      const response = await fetch(`/api/dishes/${params.id}`, {
-        method: "PUT",
+      const response = await fetch("/api/dishes", {
+        method: "POST",
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
@@ -80,68 +58,44 @@ const UpdateDish = (context) => {
       if (response.ok) {
         toast.success(jsonData.message)
         router.push("/")
-      } else{
-        toast.error(jsonData.message)
-      }
-    } catch {
-      toast.error("商品編集に失敗しました")
-    }
-  }
-
-  const handleDelete = async () => {
-    if (!confirm("本当に削除しますか?")) return
-    try {
-      const params = await context.params
-      const response = await fetch(`/api/dishes/${params.id}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        }
-      })
-      const jsonData = await response.json()
-      if (response.ok) {
-        toast.success(jsonData.message)
-        router.push("/")
       }else{
         toast.error(jsonData.message)
       }
     } catch {
-      toast.error("商品削除に失敗しました")
+      toast.error("商品登録に失敗しました")
     }
   }
 
-  const changeIngredient = (index, value) => {
+  const changeIngredient = (index: number, value: string) => {
     const newRows = [...rows]
-    newRows[index] = { ...newRows[index], ingredientId: value }
+    newRows[index] = {...newRows[index], ingredientId: value}
     setRows(newRows)
   }
 
-  const changeQuantity = (index, value) => {
+  const changeQuantity = (index: number, value: string) => {
     const newRows = [...rows]
-    newRows[index] = { ...newRows[index], quantity: value }
+    newRows[index] = {...newRows[index], quantity: value}
     setRows(newRows)
   }
 
   const addRow = () => {
-    setRows([...rows, { ingredientId: "", quantity: "" }])
+    setRows([...rows, {ingredientId: "", quantity: ""}])
   }
 
-  const deleteRow = (index) => {
+  const deleteRow = (index: number) => {
     const newRows = rows.filter((row, i) => i !== index)
     setRows(newRows)
   }
 
   const previewItems = rows
-    .filter((row) => row.ingredientId && row.quantity)
-    .map((row) => {
-      const ingredient = ingredients.find((ing) => ing.id === Number(row.ingredientId))
-      return { quantity: Number(row.quantity), ingredients: ingredient }
-    })
-    .filter((item) => item.ingredients)
+  .map((row) => {
+    const ingredient = ingredients.find((ingredient) => ingredient.id === Number(row.ingredientId))
+    if (!ingredient || !row.quantity) return null
+    return {quantity: Number(row.quantity), ingredients: ingredient}
+  })
+  .filter((item) => item !== null)
 
-  const totalCost = Math.round(calcDishCost(previewItems))
-  const costRate = sellingPrice ? Math.round(totalCost / Number(sellingPrice) * 100) : null
-  const isOverTarget = costRate !== null && costRate >= 30
+  const previewCost = calcDishCost(previewItems)
 
   if (loginUserEmail) {
     return (
@@ -149,38 +103,14 @@ const UpdateDish = (context) => {
         <div className="breadcrumb">
           <Link href="/">商品一覧</Link>
           <span className="pc">／</span>
-          <span className="pc">{name}</span>
+          <span className="pc">新しい商品を登録</span>
         </div>
         <div className="pageMain">
           <div className="pageHeading">
-            <h1 className="pageTitle">{name}</h1>
-          </div>
-          <div className="pageActions">
-            <button form="dishForm" className="btn formSubmit">変更を保存</button>
-            <button className="formDelete" type="button" onClick={handleDelete}>商品を削除</button>
+            <h1 className="pageTitle">新しい商品を登録</h1>
           </div>
         </div>
-
-        <div className={styles.summary}>
-          <dl>
-            <dt>原価合計</dt>
-            <dd>￥{totalCost.toLocaleString()}</dd>
-          </dl>
-          <dl>
-            <dt>販売価格</dt>
-            <dd>￥{Number(sellingPrice).toLocaleString()}</dd>
-          </dl>
-          <dl>
-            <dt>原価率</dt>
-            <dd>
-              <span className={isOverTarget ? styles.high : undefined}>{costRate}%</span>
-              {isOverTarget && <span className={`${styles.badge} pc`}>目標超過</span>}
-            </dd>
-          </dl>
-        </div>
-        {isOverTarget && <p className={`${styles.badgeBar} sp`}>目標の原価率を超えています</p>}
-
-        <form id="dishForm" className={`form ${styles.form}`} onSubmit={handleSubmit}>
+        <form className="form" onSubmit={handleSubmit}>
           <div className={styles.formRow}>
             <dl>
               <dt>商品名</dt>
@@ -236,15 +166,22 @@ const UpdateDish = (context) => {
                   </div>
 
                   <div className={styles.unitCost}>
-                    {unitCost !== null && `￥${unitCost.toFixed(2)} / ${selected.unit}`}
+                    {selected && unitCost !== null && `￥${unitCost.toFixed(2)} / ${selected.unit}`}
                   </div>
                   {rows.length > 1 && (
-                    <button className={styles.deleteRow} type="button" onClick={() => deleteRow(index)} aria-label="この食材を削除">×</button>
+                    <button className={styles.deleteBtn} type="button" onClick={() => deleteRow(index)} aria-label="この食材を削除">×</button>
                   )}
                 </div>
               )
             })}
             <button className={styles.addBtn} type="button" onClick={addRow}>+ 食材を追加</button>
+          </div>
+
+          <p className={styles.preview}>この商品の原価：<span>￥{Math.round(previewCost).toLocaleString()}</span></p>
+
+          <div className={`formBtns ${styles.formBtns}`}>
+            <button className="btn formSubmit">商品を登録</button>
+            <Link href="/" className="formCancel pc">キャンセル</Link>
           </div>
         </form>
       </div>
@@ -252,4 +189,4 @@ const UpdateDish = (context) => {
   }
 }
 
-export default UpdateDish
+export default CreateDishes

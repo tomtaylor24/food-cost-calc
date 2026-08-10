@@ -1,9 +1,9 @@
 "use client"
 import { useState } from "react"
-import styles from "./register.module.scss"
 import Link from "next/link"
 import {useRouter} from "next/navigation"
 import toast from "react-hot-toast"
+import { SubmitEvent } from "react"
 
 
 const Register = () => {
@@ -12,7 +12,7 @@ const Register = () => {
 
   const router = useRouter()
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
       const response = await fetch("/api/user/register", {

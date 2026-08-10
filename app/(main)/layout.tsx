@@ -1,6 +1,11 @@
 import SideBar from "@/app/components/sideBar"
+import { ReactNode } from "react"
 
-const MainLayout = ({ children }) => {
+type Props = {
+  children: ReactNode
+}
+
+const MainLayout = ({ children }: Props) => {
   return (
     <div className="layout">
       <SideBar />

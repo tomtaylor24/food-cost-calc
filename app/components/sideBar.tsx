@@ -10,7 +10,7 @@ const SideBar = () => {
   const isDishesActive = !isDishCreateActive && (pathname === "/" || pathname.startsWith("/dishes"))
   const isIngredientsActive = !isIngredientCreateActive && pathname.startsWith("/ingredients")
   return (
-    <div className={styles.sideBar}>
+    <aside className={styles.sideBar}>
       <h1 className={styles.title}>■原価管理ツール</h1>
       <nav>
         <ul>
@@ -20,7 +20,7 @@ const SideBar = () => {
           <li><Link href="/ingredients/create" className={isIngredientCreateActive ? styles.active : ""}>食材登録</Link></li>
         </ul>
       </nav>
-    </div>
+    </aside>
   )
 }
 

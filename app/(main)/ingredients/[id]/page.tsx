@@ -5,9 +5,14 @@ import Link from "next/link"
 import useAuth from "@/app/utils/useAuth"
 import styles from "./page.module.scss"
 import toast from "react-hot-toast"
+import { Ingredient } from "@/app/types"
+import { SubmitEvent } from "react"
 
+type Props = {
+  params: Promise<{id: string}>
+}
 
-const UpdateIngredient = (context) => {
+const UpdateIngredient = (context: Props) => {
   const [name, setName] = useState("")
   const [purchasePrice, setPurchasePrice] = useState("")
   const [purchaseQuantity, setPurchaseQuantity] = useState("")
@@ -26,18 +31,18 @@ const UpdateIngredient = (context) => {
         }
       })
       const jsonData = await response.json()
-      const singleItem = await jsonData.ingredient
+      const singleItem = jsonData.ingredient as Ingredient
       if (response.ok) {
         setName(singleItem.name)
-        setPurchasePrice(singleItem.purchase_price)
-        setPurchaseQuantity(singleItem.purchase_quantity)
+        setPurchasePrice(String(singleItem.purchase_price))
+        setPurchaseQuantity(String(singleItem.purchase_quantity))
         setUnit(singleItem.unit)
       }
     }
     getIngredient()
   }, [context])
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
       const params = await context.params

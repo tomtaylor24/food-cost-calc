@@ -4,10 +4,11 @@ import useAuth from "@/app/utils/useAuth"
 import Link from "next/link"
 import styles from "./page.module.scss"
 import toast from "react-hot-toast"
+import type { Ingredient } from "@/app/types"
 
 
 const IngredientsList = () => {
-  const [ingredients, setIngredientsList] = useState([])
+  const [ingredients, setIngredientsList] = useState<Ingredient[]>([])
   const loginUserEmail = useAuth()
   const [isLoading, setIsLoading] = useState(true)
 
@@ -25,7 +26,9 @@ const IngredientsList = () => {
         } else {
           toast.error(jsonData.message)
         }
-      } finally {
+      } catch{
+        toast.error("通信に失敗しました")
+      }finally {
         setIsLoading(false)
       }
     }

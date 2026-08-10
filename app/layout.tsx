@@ -1,6 +1,12 @@
 import { Noto_Sans_JP } from "next/font/google"
 import "./globals.scss"
 import { Toaster } from "react-hot-toast"
+import { ReactNode } from "react"
+import type { Metadata } from "next"
+
+type Props = {
+  children: ReactNode
+}
 
 const notoSansJP = Noto_Sans_JP({
   subsets: ["latin"],
@@ -9,12 +15,12 @@ const notoSansJP = Noto_Sans_JP({
   variable: "--font-ja",
 })
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "原価管理ツール",
   description: "商品ごとの原価と原価率を計算・管理するツール",
 }
 
-const RootLayout = ({ children }) => {
+const RootLayout = ({ children }: Props) => {
   return (
     <html lang="ja" className={notoSansJP.variable}>
       <body>
