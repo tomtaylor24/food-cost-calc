@@ -3,11 +3,16 @@ export type Dish = {
   user_id: string,
   name: string,
   selling_price: number | null,
+  category_id: number | null,
   created_at: string
 }
 
 export type DishWithCost = Dish & {
-  totalCost: number
+  totalCost: number,
+  categories: {
+    id: number,
+    name: string
+  } | null
 }
 
 export type Ingredient = {
@@ -37,4 +42,11 @@ export type DishDetail = Dish & {
       purchase_quantity: number
     }
   }[]
+}
+
+export type Category = {
+  id: number
+  user_id: string
+  name: string
+  created_at: string
 }

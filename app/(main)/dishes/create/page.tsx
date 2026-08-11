@@ -8,12 +8,14 @@ import styles from "./page.module.scss"
 import toast from "react-hot-toast"
 import { SubmitEvent } from "react"
 import type { Ingredient } from "@/app/types"
+import CategorySelect from "@/app/components/categorySelect"
 
 
 const CreateDishes = () => {
   const [name, setName] = useState("")
   const [sellingPrice, setSellingPrice] = useState("")
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
+  const [categoryId, setCategoryId] = useState("")
   const [rows, setRows] = useState([
     { ingredientId: "", quantity: "" }
   ])
@@ -51,6 +53,7 @@ const CreateDishes = () => {
         body: JSON.stringify({
           name: name,
           sellingPrice: sellingPrice,
+          categoryId: categoryId === "" ? null : categoryId,
           rows: rows
         })
       })
@@ -58,7 +61,7 @@ const CreateDishes = () => {
       if (response.ok) {
         toast.success(jsonData.message)
         router.push("/")
-      }else{
+      } else {
         toast.error(jsonData.message)
       }
     } catch {
@@ -68,18 +71,18 @@ const CreateDishes = () => {
 
   const changeIngredient = (index: number, value: string) => {
     const newRows = [...rows]
-    newRows[index] = {...newRows[index], ingredientId: value}
+    newRows[index] = { ...newRows[index], ingredientId: value }
     setRows(newRows)
   }
 
   const changeQuantity = (index: number, value: string) => {
     const newRows = [...rows]
-    newRows[index] = {...newRows[index], quantity: value}
+    newRows[index] = { ...newRows[index], quantity: value }
     setRows(newRows)
   }
 
   const addRow = () => {
-    setRows([...rows, {ingredientId: "", quantity: ""}])
+    setRows([...rows, { ingredientId: "", quantity: "" }])
   }
 
   const deleteRow = (index: number) => {
@@ -88,12 +91,12 @@ const CreateDishes = () => {
   }
 
   const previewItems = rows
-  .map((row) => {
-    const ingredient = ingredients.find((ingredient) => ingredient.id === Number(row.ingredientId))
-    if (!ingredient || !row.quantity) return null
-    return {quantity: Number(row.quantity), ingredients: ingredient}
-  })
-  .filter((item) => item !== null)
+    .map((row) => {
+      const ingredient = ingredients.find((ingredient) => ingredient.id === Number(row.ingredientId))
+      if (!ingredient || !row.quantity) return null
+      return { quantity: Number(row.quantity), ingredients: ingredient }
+    })
+    .filter((item) => item !== null)
 
   const previewCost = calcDishCost(previewItems)
 
@@ -123,7 +126,7 @@ const CreateDishes = () => {
               <dd>
                 <div className="formField">
                   <span>￥</span>
-                  <input value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} type="number" placeholder="980" required />
+                  <input value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} type="number" placeholder="980" />
                 </div>
               </dd>
             </dl>
@@ -176,6 +179,9 @@ const CreateDishes = () => {
             })}
             <button className={styles.addBtn} type="button" onClick={addRow}>+ 食材を追加</button>
           </div>
+
+          <CategorySelect value={categoryId} onChange={setCategoryId} />
+
 
           <p className={styles.preview}>この商品の原価：<span>￥{Math.round(previewCost).toLocaleString()}</span></p>
 

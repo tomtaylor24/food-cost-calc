@@ -9,6 +9,7 @@ export const ingredientSchema = z.object({
 
 export const dishSchema = z.object({
   name: z.string().min(1, "商品名を入力してください"),
+  categoryId: z.coerce.number().int().positive().nullable().optional(),
   sellingPrice: z.coerce.number().min(0, "販売価格は0以上にしてください"),
   rows: z.array(
     z.object({
@@ -21,4 +22,8 @@ export const dishSchema = z.object({
 export const userSchema = z.object({
   email: z.string().email("メールアドレスの形式が正しくありません"),
   password: z.string().min(8, "パスワードは8文字以上にしてください")
+})
+
+export const categorySchema = z.object({
+  name: z.string().trim().min(1, "カテゴリー名を入力してください").max(20, "カテゴリー名は20文字以内にしてください")
 })

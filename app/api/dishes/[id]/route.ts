@@ -4,7 +4,7 @@ import verifyToken from "@/app/utils/verifyToken"
 import { dishSchema } from "@/app/utils/schemas"
 
 type Context = {
-  params: Promise<{id: string}>
+  params: Promise<{ id: string }>
 }
 
 export async function GET(request: Request, context: Context) {
@@ -60,6 +60,19 @@ export async function PUT(request: Request, context: Context) {
         }
       }
 
+      if (result.data.categoryId) {
+        const { error: categoryError } = await supabase
+          .from("categories")
+          .select("id")
+          .eq("id", result.data.categoryId)
+          .eq("user_id", payload.userId)
+          .single()
+
+        if (categoryError) {
+          return NextResponse.json({ message: "カテゴリーが見つかりません" }, { status: 400 })
+        }
+      }
+
       const { data: oldDish, error: oldError } = await supabase
         .from("dishes")
         .select("id, dish_ingredients(ingredient_id, quantity)")
@@ -75,7 +88,8 @@ export async function PUT(request: Request, context: Context) {
         .from("dishes")
         .update({
           name: result.data.name,
-          selling_price: result.data.sellingPrice
+          selling_price: result.data.sellingPrice,
+          category_id: result.data.categoryId ?? null
         })
         .eq("id", params.id)
         .eq("user_id", payload.userId)
@@ -130,7 +144,7 @@ export async function DELETE(request: Request, context: Context) {
       return NextResponse.json({ message: "商品削除成功" }, { status: 200 })
     } catch (error) {
       console.log(error)
-      return NextResponse.json({ message: "商品削除失敗"}, { status: 500 })
+      return NextResponse.json({ message: "商品削除失敗" }, { status: 500 })
     }
   }
 }

@@ -1,0 +1,84 @@
+@use "../styles/mixin" as *;
+@use "../styles/setting" as *;
+
+.category{
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend{
+  padding: 0;
+  color: $text;
+}
+
+.list{
+  margin-top: 10px;
+}
+
+.chipGroup{
+  display: flex;
+  align-items: center;
+  input:checked + span{
+    padding-right: 34px;
+  }
+}
+
+.chipDelete{
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: -28px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba($white, .7);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+  &:hover{
+    background: rgba($white, .25);
+    color: $white;
+  }
+  &:focus-visible{
+    outline: 2px solid $white;
+    outline-offset: 1px;
+  }
+}
+
+.add{
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  input{
+    flex: 1;
+    min-width: 0;
+    max-width: 240px;
+    padding: 8px 12px;
+    border: 1px solid $border;
+    border-radius: 8px;
+    font-size: 14px;
+    &:focus{
+      border-color: $main;
+      outline: none;
+    }
+  }
+  button{
+    padding: 9px 14px;
+    border: 1px solid $border;
+    border-radius: 8px;
+    background: $white;
+    color: $black;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color .2s, color .2s;
+    &:hover{
+      border-color: $main;
+      color: $main;
+    }
+  }
+}

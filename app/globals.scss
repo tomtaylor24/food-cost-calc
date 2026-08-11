@@ -209,6 +209,45 @@ dd {
     text-decoration: none;
   }
 }
+.chips{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip{
+  input{
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+  span{
+    display: inline-block;
+    padding: 7px 16px;
+    border: 1px solid $border;
+    border-radius: 999px;
+    background: $white;
+    color: $text;
+    font-size: 14px;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: border-color .2s, background .2s, color .2s;
+  }
+  span:hover{
+    border-color: $main;
+    color: $main;
+  }
+  input:checked + span{
+    border-color: $main;
+    background: $main;
+    color: $white;
+  }
+  input:focus-visible + span{
+    outline: 2px solid $main;
+    outline-offset: 2px;
+  }
+}
+
 .errorState{
   margin-top: 32px;
   padding: 64px 24px;

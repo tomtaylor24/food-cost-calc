@@ -29,12 +29,26 @@ export async function POST(request: Request) {
         }
       }
 
+      if (result.data.categoryId) {
+        const { error: categoryError } = await supabase
+          .from("categories")
+          .select("id")
+          .eq("id", result.data.categoryId)
+          .eq("user_id", payload.userId)
+          .single()
+
+        if (categoryError) {
+          return NextResponse.json({ message: "カテゴリーが見つかりません" }, { status: 400 })
+        }
+      }
+
       const { data, error } = await supabase
         .from("dishes")
         .insert({
           user_id: payload.userId,
           name: result.data.name,
-          selling_price: result.data.sellingPrice
+          selling_price: result.data.sellingPrice,
+          category_id: result.data.categoryId ?? null
         })
         .select()
         .single()
@@ -62,7 +76,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request:Request) {
+export async function GET(request: Request) {
   const payload = await verifyToken(request)
 
   if (!payload) {
@@ -71,8 +85,9 @@ export async function GET(request:Request) {
     try {
       const { data, error } = await supabase
         .from("dishes")
-        .select("*, dish_ingredients(quantity, ingredients(purchase_price, purchase_quantity))")
+        .select("*, categories(id, name), dish_ingredients(quantity, ingredients(purchase_price, purchase_quantity))")
         .eq("user_id", payload.userId)
+        .order("created_at", { ascending: false })
       if (error) throw new Error(error.message)
       const dishesWithCost = data.map((dish) => {
         const cost = calcDishCost(dish.dish_ingredients)

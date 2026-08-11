@@ -8,6 +8,7 @@ import styles from "./page.module.scss"
 import toast from "react-hot-toast"
 import type { Dish, DishDetail, Ingredient } from "@/app/types"
 import type { RecipeRow } from "@/app/types"
+import CategorySelect from "@/app/components/categorySelect"
 import { SubmitEvent } from "react"
 
 type Props = {
@@ -18,6 +19,7 @@ const UpdateDish = (context: Props) => {
   const [name, setName] = useState("")
   const [sellingPrice, setSellingPrice] = useState("")
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
+  const [categoryId, setCategoryId] = useState("")
   const [rows, setRows] = useState<RecipeRow[]>([])
 
   const router = useRouter()
@@ -37,6 +39,7 @@ const UpdateDish = (context: Props) => {
         if (response.ok) {
           setName(singleItem.name)
           setSellingPrice(String(singleItem.selling_price ?? ""))
+          setCategoryId(String(singleItem.category_id ?? ""))
           setRows(singleItem.dish_ingredients.map((item) => ({
             ingredientId: String(item.ingredient_id),
             quantity: String(item.quantity),
@@ -83,6 +86,7 @@ const UpdateDish = (context: Props) => {
         body: JSON.stringify({
           name: name,
           sellingPrice: sellingPrice,
+          categoryId: categoryId === "" ? null : categoryId,
           rows: rows
         })
       })
@@ -256,6 +260,8 @@ const UpdateDish = (context: Props) => {
             })}
             <button className={styles.addBtn} type="button" onClick={addRow}>+ 食材を追加</button>
           </div>
+
+          <CategorySelect value={categoryId} onChange={setCategoryId} />
         </form>
       </div>
     )

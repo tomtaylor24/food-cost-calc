@@ -4,7 +4,7 @@ import useAuth from "@/app/utils/useAuth"
 import Link from "next/link"
 import styles from "./page.module.scss"
 import toast from "react-hot-toast"
-import type { DishWithCost } from "../types"
+import type { DishWithCost, Category } from "../types"
 
 
 const DishesList = () => {
@@ -12,6 +12,8 @@ const DishesList = () => {
   const loginUserEmail = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
+  const [filterId, setFilterId] = useState("all")
+  const [categories, setCategories] = useState<Category[]>([])
 
   useEffect(() => {
     const getDishes = async () => {
@@ -27,8 +29,8 @@ const DishesList = () => {
         } else {
           toast.error(jsonData.message)
         }
-      } catch{
-        setLoadError (true)
+      } catch {
+        setLoadError(true)
         toast.error("通信に失敗しました")
       }
       finally {
@@ -37,6 +39,58 @@ const DishesList = () => {
     }
     getDishes()
   }, [])
+
+  useEffect(() => {
+    const getCategories = async () => {
+      try {
+        const response = await fetch("/api/categories", {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          }
+        })
+        const jsonData = await response.json()
+        if (response.ok) {
+          setCategories(jsonData.categories)
+        } else {
+          toast.error(jsonData.message)
+        }
+      } catch {
+        toast.error("通信に失敗しました")
+      }
+    }
+    getCategories()
+  }, [])
+
+  const visibleDishes = dishes.filter((dish) => {
+    if (filterId === "all") return true
+    if (filterId === "") return dish.category_id === null
+    return dish.category_id === Number(filterId)
+  })
+
+  const filterChips = (
+          <fieldset className={styles.filter}>
+        <legend>カテゴリー</legend>
+        <div className="chips">
+          <label className="chip">
+            <input type="radio" name="filter" value="all"
+              checked={filterId === "all"} onChange={(e) => setFilterId(e.target.value)} />
+            <span>すべて</span>
+          </label>
+          {categories.map((category) => (
+            <label className="chip" key={category.id}>
+              <input type="radio" name="filter" value={String(category.id)}
+                checked={filterId === String(category.id)} onChange={(e) => setFilterId(e.target.value)} />
+              <span>{category.name}</span>
+            </label>
+          ))}
+          <label className="chip">
+            <input type="radio" name="filter" value=""
+              checked={filterId === ""} onChange={(e) => setFilterId(e.target.value)} />
+            <span>未分類</span>
+          </label>
+        </div>
+      </fieldset>
+  )
 
   if (!loginUserEmail) return null
 
@@ -108,6 +162,24 @@ const DishesList = () => {
     )
   }
 
+    if (visibleDishes.length === 0) {
+    return (
+      <div className="container">
+        <div className="pageMain">
+          <div className="pageHeading">
+            <h1 className="pageTitle">商品一覧</h1>
+            <p className="pageDescription">登録済みの商品と原価率を確認できます</p>
+          </div>
+        </div>
+        {filterChips}
+        <div className="emptyState">
+          <p className="emptyStateTitle">このカテゴリーには商品がありません</p>
+          <button type="button" className="btn emptyStateBtn" onClick={() => setFilterId("all")}>すべての商品を表示</button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container">
       <div className="pageMain">
@@ -119,6 +191,7 @@ const DishesList = () => {
           <Link href="/dishes/create" className="btn">+ 新しい商品を登録</Link>
         </div>
       </div>
+      {filterChips}
       <ul className={styles.table}>
         <li className={`${styles.tableItem} ${styles.title}`}>
           <div>料理名</div>
@@ -126,7 +199,7 @@ const DishesList = () => {
           <div>原価</div>
           <div>原価率</div>
         </li>
-        {dishes.map((dish) => {
+        {visibleDishes.map((dish) => {
           const costRate = dish.selling_price
             ? Math.round(dish.totalCost / dish.selling_price * 100)
             : null

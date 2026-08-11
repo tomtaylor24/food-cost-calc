@@ -113,3 +113,20 @@
 .high{
   color: $red;
 }
+
+.filter{
+  min-width: 0;
+  margin: 24px 0 0;
+  padding: 0;
+  border: 0;
+  legend{
+    padding: 0;
+    color: $text;
+  }
+  .chips{
+    margin-top: 10px;
+  }
+  @include sp{
+    margin-top: 16px;
+  }
+}
