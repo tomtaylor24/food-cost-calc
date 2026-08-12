@@ -5,6 +5,8 @@ import Link from "next/link"
 import useAuth from "@/app/utils/useAuth"
 import styles from "./page.module.scss"
 import toast from "react-hot-toast"
+import Combobox from "@/app/components/combobox"
+import { UNIT_OPTIONS } from "@/app/utils/units"
 import { SubmitEvent } from "react"
 
 const CreateIngredients = () => {
@@ -38,10 +40,10 @@ const CreateIngredients = () => {
         toast.success(jsonData.message)
         router.push("/ingredients")
       } else {
-        toast.error("食材登録に失敗しました")
+        toast.error(jsonData.message)
       }
     } catch {
-      toast.error("食材登録に失敗しました")
+      toast.error("通信に失敗しました")
     }
   }
   if (!loginUserEmail) return null
@@ -59,32 +61,37 @@ const CreateIngredients = () => {
       </div>
       <form className={`form ${styles.form}`} onSubmit={handleSubmit}>
         <dl>
-          <dt>食材名</dt>
+          <dt><label htmlFor="ingredient-name">食材名</label></dt>
           <dd>
-            <input className="formInput" value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="例：鶏もも肉" required />
+            <input id="ingredient-name" className="formInput" value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="例：鶏もも肉" required />
           </dd>
         </dl>
 
         <div className={styles.formRow}>
           <dl>
-            <dt>仕入れ値</dt>
+            <dt><label htmlFor="purchase-price">仕入れ値</label></dt>
             <dd>
               <div className="formField">
                 <span>￥</span>
-                <input value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)} type="number" placeholder="880" required />
+                <input id="purchase-price" value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)} type="number" placeholder="880" required />
               </div>
             </dd>
           </dl>
           <dl>
-            <dt>仕入れ量</dt>
+            <dt><label htmlFor="purchase-quantity">仕入れ量</label></dt>
             <dd className={styles.quantity}>
-              <input className="formInput" value={purchaseQuantity} onChange={(e) => setPurchaseQuantity(e.target.value)} type="number" placeholder="1000" required />
-              <select className="formSelect" value={unit} onChange={(e) => setUnit(e.target.value)} required>
-                <option value="">単位</option>
-                <option value="g">g</option>
-                <option value="ml">ml</option>
-                <option value="個">個</option>
-              </select>
+              <input id="purchase-quantity" className="formInput" value={purchaseQuantity} onChange={(e) => setPurchaseQuantity(e.target.value)} type="number" placeholder="1000" required />
+              <Combobox
+                options={UNIT_OPTIONS}
+                value={unit}
+                onChange={setUnit}
+                placeholder="単位"
+                allowFreeInput
+                maxLength={10}
+                ariaLabel="単位"
+                required
+              />
+
             </dd>
           </dl>
         </div>

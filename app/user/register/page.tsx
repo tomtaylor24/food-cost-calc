@@ -1,9 +1,10 @@
 "use client"
 import { useState } from "react"
 import Link from "next/link"
-import {useRouter} from "next/navigation"
+import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 import { SubmitEvent } from "react"
+import useGuestOnly from "@/app/utils/useGuestOnly"
 
 
 const Register = () => {
@@ -11,12 +12,13 @@ const Register = () => {
   const [password, setPassword] = useState("")
 
   const router = useRouter()
+  useGuestOnly()
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
       const response = await fetch("/api/user/register", {
-        method: "POST", 
+        method: "POST",
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json"
@@ -27,10 +29,11 @@ const Register = () => {
         })
       })
       const jsonData = await response.json()
-      if(response.ok){
+      if (response.ok) {
+        localStorage.setItem("token", jsonData.token)
         toast.success(jsonData.message)
-        router.push("/user/login")
-      }else{
+        router.push("/")
+      } else {
         toast.error(jsonData.message)
       }
     } catch {

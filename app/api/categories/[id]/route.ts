@@ -1,6 +1,7 @@
 import verifyToken from "@/app/utils/verifyToken";
 import { NextResponse } from "next/server";
 import supabase from "@/app/utils/database";
+import { DbError } from "@/app/utils/dbError";
 
 type Context = {
   params: Promise<{id: string}>
@@ -17,7 +18,7 @@ export async function DELETE(request: Request, context: Context) {
         .delete()
         .eq("id", params.id)
         .eq("user_id", payload.userId)
-      if (error) throw new Error(error.message)
+      if (error) throw new DbError(error)
       return NextResponse.json({ message: "カテゴリー削除成功" }, { status: 200 })
     } catch (error) {
       console.log(error)

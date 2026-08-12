@@ -6,7 +6,7 @@ type DishIngredientRow = {
   }
 }
 
-export const calcItemCost = (item: DishIngredientRow) => {
+const calcItemCost = (item: DishIngredientRow) => {
   return (item.ingredients.purchase_price / item.ingredients.purchase_quantity) * item.quantity
 }
 

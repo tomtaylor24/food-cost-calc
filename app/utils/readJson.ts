@@ -1,0 +1,9 @@
+const readJson = async (request: Request): Promise<unknown> => {
+  try {
+    return await request.json()
+  } catch {
+    return null
+  }
+}
+
+export default readJson

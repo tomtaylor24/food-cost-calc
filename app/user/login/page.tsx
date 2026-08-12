@@ -4,12 +4,14 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 import { SubmitEvent } from "react"
+import useGuestOnly from "@/app/utils/useGuestOnly"
 
 const Login = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
   const router = useRouter()
+  useGuestOnly()
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -26,11 +28,11 @@ const Login = () => {
         })
       })
       const jsonData = await response.json()
-      if(response.ok){
+      if (response.ok) {
         localStorage.setItem("token", jsonData.token)
         toast.success(jsonData.message)
         router.push("/")
-      }else{
+      } else {
         toast.error(jsonData.message)
       }
     }

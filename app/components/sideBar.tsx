@@ -11,7 +11,7 @@ const SideBar = () => {
   const isIngredientsActive = !isIngredientCreateActive && pathname.startsWith("/ingredients")
   return (
     <aside className={styles.sideBar}>
-      <h1 className={styles.title}>■原価管理ツール</h1>
+      <p className={styles.title}><Link href="/">■原価管理ツール</Link></p>
       <nav>
         <ul>
           <li><Link href="/" className={isDishesActive ? styles.active : ""}>商品一覧</Link></li>

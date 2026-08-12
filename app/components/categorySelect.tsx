@@ -87,7 +87,7 @@ const CategorySelect = ({ value, onChange }: Props) => {
   return (
     <fieldset className={styles.category}>
       <legend className={styles.legend}>カテゴリー</legend>
-      <div className={`chips ${styles.list}`}>
+      <div className="chips">
         <label className="chip">
           <input type="radio" name="category" value="" checked={value === ""} onChange={(e) => onChange(e.target.value)} />
           <span>なし</span>

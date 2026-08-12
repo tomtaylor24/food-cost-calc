@@ -50,3 +50,29 @@ export type Category = {
   name: string
   created_at: string
 }
+
+export type User = {
+  id: string
+  email: string
+  password_hash: string
+  created_at: string
+}
+
+export type DishListRow = Dish & {
+  categories: { id: number, name: string } | null
+  dish_ingredients: {
+    quantity: number
+    ingredients: {
+      purchase_price: number
+      purchase_quantity: number
+    }
+  }[]
+}
+
+export type OldDishRow = {
+  id: number
+  dish_ingredients: {
+    ingredient_id: number
+    quantity: number
+  }[]
+}

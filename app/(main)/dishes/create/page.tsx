@@ -9,6 +9,7 @@ import toast from "react-hot-toast"
 import { SubmitEvent } from "react"
 import type { Ingredient } from "@/app/types"
 import CategorySelect from "@/app/components/categorySelect"
+import Combobox from "@/app/components/combobox"
 
 
 const CreateDishes = () => {
@@ -42,6 +43,19 @@ const CreateDishes = () => {
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const seenIds: string[] = []
+
+    for (const row of rows) {
+      if (row.ingredientId === "") continue
+
+      if (seenIds.includes(row.ingredientId)) {
+        toast.error("同じ食材が複数の行で選ばれています")
+        return
+      }
+
+      seenIds.push(row.ingredientId)
+    }
+
     try {
       const response = await fetch("/api/dishes", {
         method: "POST",
@@ -52,7 +66,7 @@ const CreateDishes = () => {
         },
         body: JSON.stringify({
           name: name,
-          sellingPrice: sellingPrice,
+          sellingPrice: sellingPrice === "" ? null : sellingPrice,
           categoryId: categoryId === "" ? null : categoryId,
           rows: rows
         })
@@ -86,9 +100,14 @@ const CreateDishes = () => {
   }
 
   const deleteRow = (index: number) => {
-    const newRows = rows.filter((row, i) => i !== index)
+    const newRows = rows.filter((_, i) => i !== index)
     setRows(newRows)
   }
+
+  const ingredientOptions = ingredients.map((ingredient) => ({
+    value: String(ingredient.id),
+    label: ingredient.name
+  }))
 
   const previewItems = rows
     .map((row) => {
@@ -116,17 +135,17 @@ const CreateDishes = () => {
         <form className="form" onSubmit={handleSubmit}>
           <div className={styles.formRow}>
             <dl>
-              <dt>商品名</dt>
+              <dt><label htmlFor="dish-name">商品名</label></dt>
               <dd>
-                <input className="formInput" value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="例：唐揚げ定食" required />
+                <input id="dish-name" className="formInput" value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="例：唐揚げ定食" required />
               </dd>
             </dl>
             <dl>
-              <dt>販売価格</dt>
+              <dt><label htmlFor="selling-price">販売価格</label></dt>
               <dd>
                 <div className="formField">
                   <span>￥</span>
-                  <input value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} type="number" placeholder="980" />
+                  <input id="selling-price" value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} type="number" placeholder="980" />
                 </div>
               </dd>
             </dl>
@@ -140,23 +159,20 @@ const CreateDishes = () => {
             </div>
             <div className={`${styles.rowsLabel} sp`}>食材と使用量</div>
             {rows.map((row, index) => {
+              const usedByOthers = rows.filter((_, i) => i !== index).map((other) => other.ingredientId)
               const selected = ingredients.find((ingredient) => ingredient.id === Number(row.ingredientId))
               const unitCost = selected ? selected.purchase_price / selected.purchase_quantity : null
               return (
                 <div className={styles.row} key={index}>
-                  <select
-                    className="formSelect"
+                  <Combobox
+                    options={ingredientOptions.filter((option) => !usedByOthers.includes(option.value))}
                     value={row.ingredientId}
-                    onChange={(e) => changeIngredient(index, e.target.value)}
+                    onChange={(newValue) => changeIngredient(index, newValue)}
+                    placeholder="食材を検索"
+                    ariaLabel={`${index + 1}行目の食材`}
+                    emptyMessage="該当する食材がありません"
                     required
-                  >
-                    <option value="">食材を選択</option>
-                    {ingredients.map((ingredient) => (
-                      <option value={ingredient.id} key={ingredient.id}>
-                        {ingredient.name}
-                      </option>
-                    ))}
-                  </select>
+                  />
 
                   <div className="formField">
                     <input
@@ -164,6 +180,7 @@ const CreateDishes = () => {
                       onChange={(e) => changeQuantity(index, e.target.value)}
                       placeholder="使用量"
                       type="number"
+                      aria-label={`${index + 1}行目の使用量`}
                     />
                     <span>{selected?.unit}</span>
                   </div>

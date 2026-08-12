@@ -20,6 +20,12 @@
   .title{
     font-size: 14px;
     font-weight: bold;
+    a{
+      color: inherit;
+      &:hover{
+        opacity: .7;
+      }
+    }
   }
   ul{
     margin-top: 24px;

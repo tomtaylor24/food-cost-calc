@@ -2,6 +2,8 @@ import verifyToken from "@/app/utils/verifyToken";
 import { NextResponse } from "next/server";
 import supabase from "@/app/utils/database";
 import { ingredientSchema } from "@/app/utils/schemas";
+import readJson from "@/app/utils/readJson";
+import { DbError, isUniqueViolation } from "@/app/utils/dbError";
 
 type Context = {
   params: Promise<{id: string}>
@@ -15,7 +17,7 @@ export async function GET(request: Request, context: Context) {
     try {
       const params = await context.params
       const { data, error } = await supabase.from("ingredients").select().eq("id", params.id).eq("user_id", payload.userId).single()
-      if (error) throw new Error(error.message)
+      if (error) throw new DbError(error)
       return NextResponse.json({ message: "食材詳細取得成功", ingredient: data }, { status: 200 })
     } catch (error) {
       console.log(error)
@@ -30,7 +32,10 @@ export async function PUT(request: Request, context: Context) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
   } else {
     try {
-      const reqBody = await request.json()
+      const reqBody = await readJson(request)
+      if (reqBody === null) {
+      return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
+      }
       const params = await context.params
       const result = ingredientSchema.safeParse(reqBody)
       if (!result.success) {
@@ -45,11 +50,10 @@ export async function PUT(request: Request, context: Context) {
         })
         .eq("id", params.id)
         .eq("user_id", payload.userId)
-      if (error) throw new Error(error.message)
+      if (error) throw new DbError(error)
       return NextResponse.json({ message: "食材編集成功" }, { status: 200 })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "不明なエラーです"
-      if (errorMessage.includes("duplicate key")) {
+      if (isUniqueViolation(error)) {
         return NextResponse.json({ message: "同じ名前の食材が既に登録されています" }, { status: 400 })
       }
       return NextResponse.json({ message: "食材編集に失敗しました" }, { status: 500 })
@@ -68,7 +72,7 @@ export async function DELETE(request: Request, context: Context) {
         .delete()
         .eq("id", params.id)
         .eq("user_id", payload.userId)
-      if (error) throw new Error(error.message)
+      if (error) throw new DbError(error)
       return NextResponse.json({ message: "食材削除成功" }, { status: 200 })
     } catch (error) {
       console.log(error)

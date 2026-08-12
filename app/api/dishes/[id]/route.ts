@@ -2,6 +2,9 @@ import { NextResponse } from "next/server"
 import supabase from "@/app/utils/database"
 import verifyToken from "@/app/utils/verifyToken"
 import { dishSchema } from "@/app/utils/schemas"
+import readJson from "@/app/utils/readJson"
+import type { OldDishRow } from "@/app/types"
+import { DbError, isUniqueViolation } from "@/app/utils/dbError"
 
 type Context = {
   params: Promise<{ id: string }>
@@ -21,7 +24,7 @@ export async function GET(request: Request, context: Context) {
         .eq("id", params.id)
         .eq("user_id", payload.userId)
         .single()
-      if (error) throw new Error(error.message)
+      if (error) throw new DbError(error)
       return NextResponse.json({
         message: "商品詳細取得成功",
         dish: data
@@ -40,7 +43,10 @@ export async function PUT(request: Request, context: Context) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
   } else {
     try {
-      const reqBody = await request.json()
+      const reqBody = await readJson(request)
+      if (reqBody === null) {
+      return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
+      }
       const params = await context.params
       const result = dishSchema.safeParse(reqBody)
       if (!result.success) {
@@ -84,6 +90,8 @@ export async function PUT(request: Request, context: Context) {
         return NextResponse.json({ message: "商品が見つかりません" }, { status: 404 })
       }
 
+      const previousDish = oldDish as OldDishRow
+
       const { error } = await supabase
         .from("dishes")
         .update({
@@ -93,7 +101,7 @@ export async function PUT(request: Request, context: Context) {
         })
         .eq("id", params.id)
         .eq("user_id", payload.userId)
-      if (error) throw new Error(error.message)
+      if (error) throw new DbError(error)
       await supabase
         .from("dish_ingredients")
         .delete()
@@ -108,19 +116,21 @@ export async function PUT(request: Request, context: Context) {
         .insert(items)
       if (itemError) {
         await supabase.from("dish_ingredients").insert(
-          oldDish.dish_ingredients.map((old) => ({
+          previousDish.dish_ingredients.map((old) => ({
             dish_id: Number(params.id),
             ingredient_id: old.ingredient_id,
             quantity: old.quantity
           }))
         )
-        throw new Error(itemError.message)
+        throw new DbError(itemError)
       }
       return NextResponse.json({ message: "商品編集成功" }, { status: 200 })
     } catch (error) {
       console.log(error)
-      const errorMessage = error instanceof Error ? error.message : "不明なエラーです"
-      if (errorMessage.includes("duplicate key")) {
+      if (isUniqueViolation(error, "dish_ingredients")) {
+        return NextResponse.json({ message: "同じ食材が複数の行で選ばれています" }, { status: 400 })
+      }
+      if (isUniqueViolation(error)) {
         return NextResponse.json({ message: "同じ名前の商品が既に登録されています" }, { status: 400 })
       }
       return NextResponse.json({ message: "商品編集に失敗しました" }, { status: 500 })
@@ -140,7 +150,7 @@ export async function DELETE(request: Request, context: Context) {
         .delete()
         .eq("id", params.id)
         .eq("user_id", payload.userId)
-      if (error) throw new Error(error.message)
+      if (error) throw new DbError(error)
       return NextResponse.json({ message: "商品削除成功" }, { status: 200 })
     } catch (error) {
       console.log(error)
