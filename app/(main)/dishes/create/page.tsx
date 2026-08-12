@@ -16,7 +16,7 @@ const CreateDishes = () => {
   const [name, setName] = useState("")
   const [sellingPrice, setSellingPrice] = useState("")
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
-  const [categoryId, setCategoryId] = useState("")
+  const [categoryIds, setCategoryIds] = useState<string[]>([])
   const [rows, setRows] = useState([
     { ingredientId: "", quantity: "" }
   ])
@@ -67,14 +67,14 @@ const CreateDishes = () => {
         body: JSON.stringify({
           name: name,
           sellingPrice: sellingPrice === "" ? null : sellingPrice,
-          categoryId: categoryId === "" ? null : categoryId,
+          categoryIds: categoryIds,
           rows: rows
         })
       })
       const jsonData = await response.json()
       if (response.ok) {
         toast.success(jsonData.message)
-        router.push("/")
+        router.push("/dishes")
       } else {
         toast.error(jsonData.message)
       }
@@ -123,7 +123,7 @@ const CreateDishes = () => {
     return (
       <div className="container">
         <div className="breadcrumb">
-          <Link href="/">商品一覧</Link>
+          <Link href="/dishes">商品一覧</Link>
           <span className="pc">／</span>
           <span className="pc">新しい商品を登録</span>
         </div>
@@ -197,14 +197,14 @@ const CreateDishes = () => {
             <button className={styles.addBtn} type="button" onClick={addRow}>+ 食材を追加</button>
           </div>
 
-          <CategorySelect value={categoryId} onChange={setCategoryId} />
+          <CategorySelect value={categoryIds} onChange={setCategoryIds} />
 
 
           <p className={styles.preview}>この商品の原価：<span>￥{Math.round(previewCost).toLocaleString()}</span></p>
 
           <div className={`formBtns ${styles.formBtns}`}>
             <button className="btn formSubmit">商品を登録</button>
-            <Link href="/" className="formCancel pc">キャンセル</Link>
+            <Link href="/dishes" className="formCancel pc">キャンセル</Link>
           </div>
         </form>
       </div>

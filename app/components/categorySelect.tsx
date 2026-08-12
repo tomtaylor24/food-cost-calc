@@ -5,8 +5,8 @@ import type { Category } from "@/app/types"
 import styles from "./categorySelect.module.scss"
 
 type Props = {
-  value: string
-  onChange: (value: string) => void
+  value: string[]
+  onChange: (value: string[]) => void
 }
 
 const CategorySelect = ({ value, onChange }: Props) => {
@@ -52,7 +52,7 @@ const CategorySelect = ({ value, onChange }: Props) => {
       if (response.ok) {
         toast.success(jsonData.message)
         setCategories([...categories, jsonData.category])
-        onChange(String(jsonData.category.id))
+        onChange([...value, String(jsonData.category.id)])
         setNewCategory("")
       } else {
         toast.error(jsonData.message)
@@ -63,7 +63,7 @@ const CategorySelect = ({ value, onChange }: Props) => {
   }
 
   const handleDeleteCategory = async (id: number) => {
-    if (!confirm("このカテゴリーを削除しますか?\nこの分類が付いている商品は「未分類」になります")) return
+    if (!confirm("このカテゴリーを削除しますか?\nこのカテゴリーが付いている商品から、この分類が外れます")) return
     try {
       const response = await fetch(`/api/categories/${id}`, {
         method: "DELETE",
@@ -75,7 +75,7 @@ const CategorySelect = ({ value, onChange }: Props) => {
       if (response.ok) {
         toast.success(jsonData.message)
         setCategories(categories.filter((category) => category.id !== id))
-        onChange("")
+        onChange(value.filter((selected) => selected !== String(id)))
       } else {
         toast.error(jsonData.message)
       }
@@ -84,25 +84,33 @@ const CategorySelect = ({ value, onChange }: Props) => {
     }
   }
 
+  const toggleCategory = (id: string) => {
+    if (value.includes(id)) {
+      onChange(value.filter((selected) => selected !== id))
+    } else {
+      onChange([...value, id])
+    }
+  }
+
   return (
     <fieldset className={styles.category}>
-      <legend className={styles.legend}>カテゴリー</legend>
+      <legend className={styles.legend}>カテゴリー（複数選択できます）</legend>
       <div className="chips">
-        <label className="chip">
-          <input type="radio" name="category" value="" checked={value === ""} onChange={(e) => onChange(e.target.value)} />
-          <span>なし</span>
-        </label>
         {categories.map((category) => (
           <div className={styles.chipGroup} key={category.id}>
             <label className="chip">
-              <input type="radio" name="category" value={String(category.id)}
-                checked={value === String(category.id)} onChange={(e) => onChange(e.target.value)} />
+              <input type="checkbox" value={String(category.id)}
+                checked={value.includes(String(category.id))}
+                onChange={(e) => toggleCategory(e.target.value)} />
               <span>{category.name}</span>
             </label>
-            {value === String(category.id) && (
+            {value.includes(String(category.id)) ? (
               <button type="button" className={styles.chipDelete}
                 onClick={() => handleDeleteCategory(category.id)}
                 aria-label={`${category.name}を削除`}>×</button>
+            ) : (
+              <button type="button" className={styles.chipAdd} tabIndex={-1} aria-hidden="true"
+                onClick={() => toggleCategory(String(category.id))}>＋</button>
             )}
           </div>
         ))}

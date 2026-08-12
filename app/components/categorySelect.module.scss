@@ -16,12 +16,13 @@
 .chipGroup{
   display: flex;
   align-items: center;
-  input:checked + span{
+  span{
     padding-right: 34px;
   }
 }
 
-.chipDelete{
+.chipDelete,
+.chipAdd{
   display: grid;
   place-items: center;
   width: 22px;
@@ -30,11 +31,14 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: rgba($white, .7);
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
   transition: background .2s, color .2s;
+}
+
+.chipDelete{
+  color: rgba($white, .7);
   &:hover{
     background: rgba($white, .25);
     color: $white;
@@ -42,6 +46,14 @@
   &:focus-visible{
     outline: 2px solid $white;
     outline-offset: 1px;
+  }
+}
+
+.chipAdd{
+  color: #C3CAD6;
+  &:hover{
+    background: rgba($main, .1);
+    color: $main;
   }
 }
 

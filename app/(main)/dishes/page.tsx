@@ -4,7 +4,7 @@ import useAuth from "@/app/utils/useAuth"
 import Link from "next/link"
 import styles from "./page.module.scss"
 import toast from "react-hot-toast"
-import type { DishWithCost, Category } from "../types"
+import type { DishWithCost, Category } from "@/app/types"
 
 
 const DishesList = () => {
@@ -64,8 +64,8 @@ const DishesList = () => {
 
   const visibleDishes = dishes.filter((dish) => {
     if (filterId === "all") return true
-    if (filterId === "") return dish.category_id === null
-    return dish.category_id === Number(filterId)
+    if (filterId === "") return dish.categories.length === 0
+    return dish.categories.some((category) => category.id === Number(filterId))
   })
 
   let sumCost = 0

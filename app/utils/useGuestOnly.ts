@@ -15,7 +15,7 @@ const useGuestOnly = () => {
         localStorage.removeItem("token")
         return
       }
-      router.push("/")
+      router.push("/dishes")
     } catch {
       localStorage.removeItem("token")
     }

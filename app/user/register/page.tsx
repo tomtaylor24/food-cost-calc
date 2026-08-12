@@ -32,7 +32,7 @@ const Register = () => {
       if (response.ok) {
         localStorage.setItem("token", jsonData.token)
         toast.success(jsonData.message)
-        router.push("/")
+        router.push("/dishes")
       } else {
         toast.error(jsonData.message)
       }

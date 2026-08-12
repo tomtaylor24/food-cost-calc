@@ -20,7 +20,7 @@ const UpdateDish = (context: Props) => {
   const [name, setName] = useState("")
   const [sellingPrice, setSellingPrice] = useState("")
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
-  const [categoryId, setCategoryId] = useState("")
+  const [categoryIds, setCategoryIds] = useState<string[]>([])
   const [rows, setRows] = useState<RecipeRow[]>([])
 
   const router = useRouter()
@@ -40,14 +40,14 @@ const UpdateDish = (context: Props) => {
         if (response.ok) {
           setName(singleItem.name)
           setSellingPrice(String(singleItem.selling_price ?? ""))
-          setCategoryId(String(singleItem.category_id ?? ""))
+          setCategoryIds(singleItem.dish_categories.map((row) => String(row.category_id)))
           setRows(singleItem.dish_ingredients.map((item) => ({
             ingredientId: String(item.ingredient_id),
             quantity: String(item.quantity),
           })))
         } else {
           toast.error(jsonData.message)
-          router.push("/")
+          router.push("/dishes")
         }
       } catch {
         toast.error("通信に失敗しました")
@@ -99,14 +99,14 @@ const UpdateDish = (context: Props) => {
         body: JSON.stringify({
           name: name,
           sellingPrice: sellingPrice === "" ? null : sellingPrice,
-          categoryId: categoryId === "" ? null : categoryId,
+          categoryIds: categoryIds,
           rows: rows
         })
       })
       const jsonData = await response.json()
       if (response.ok) {
         toast.success(jsonData.message)
-        router.push("/")
+        router.push("/dishes")
       } else {
         toast.error(jsonData.message)
       }
@@ -128,7 +128,7 @@ const UpdateDish = (context: Props) => {
       const jsonData = await response.json()
       if (response.ok) {
         toast.success(jsonData.message)
-        router.push("/")
+        router.push("/dishes")
       } else {
         toast.error(jsonData.message)
       }
@@ -179,7 +179,7 @@ const UpdateDish = (context: Props) => {
     return (
       <div className="container">
         <div className="breadcrumb">
-          <Link href="/">商品一覧</Link>
+          <Link href="/dishes">商品一覧</Link>
           <span className="pc">／</span>
           <span className="pc">{name}</span>
         </div>
@@ -279,7 +279,7 @@ const UpdateDish = (context: Props) => {
             <button className={styles.addBtn} type="button" onClick={addRow}>+ 食材を追加</button>
           </div>
 
-          <CategorySelect value={categoryId} onChange={setCategoryId} />
+          <CategorySelect value={categoryIds} onChange={setCategoryIds} />
         </form>
       </div>
     )

@@ -31,7 +31,7 @@ const Login = () => {
       if (response.ok) {
         localStorage.setItem("token", jsonData.token)
         toast.success(jsonData.message)
-        router.push("/")
+        router.push("/dishes")
       } else {
         toast.error(jsonData.message)
       }
@@ -44,7 +44,7 @@ const Login = () => {
   return (
     <div className="auth">
       <div className="inner">
-        <h1 className="authTitle">原価管理ツールにログイン</h1>
+        <h1 className="authTitle">Genkalcにログイン</h1>
         <p className="authText">メールアドレスとパスワードを入力してください</p>
         <form className="authForm" onSubmit={handleSubmit}>
           <dl>

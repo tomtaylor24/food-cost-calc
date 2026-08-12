@@ -35,11 +35,11 @@ export async function POST(request: Request) {
         }
       }
 
-      if (result.data.categoryId) {
+      for (const categoryId of result.data.categoryIds) {
         const { error: categoryError } = await supabase
           .from("categories")
           .select("id")
-          .eq("id", result.data.categoryId)
+          .eq("id", categoryId)
           .eq("user_id", payload.userId)
           .single()
 
@@ -53,8 +53,7 @@ export async function POST(request: Request) {
         .insert({
           user_id: payload.userId,
           name: result.data.name,
-          selling_price: result.data.sellingPrice,
-          category_id: result.data.categoryId ?? null
+          selling_price: result.data.sellingPrice
         })
         .select()
         .single()
@@ -76,11 +75,28 @@ export async function POST(request: Request) {
         await supabase.from("dishes").delete().eq("id", inserted.id)
         throw new DbError(itemError)
       }
+
+      if (result.data.categoryIds.length > 0) {
+        const categoryRows = result.data.categoryIds.map((categoryId) => ({
+          dish_id: inserted.id,
+          category_id: categoryId
+        }))
+        const { error: categoryInsertError } = await supabase
+          .from("dish_categories")
+          .insert(categoryRows)
+        if (categoryInsertError) {
+          await supabase.from("dishes").delete().eq("id", inserted.id)
+          throw new DbError(categoryInsertError)
+        }
+      }
       return NextResponse.json({ message: "商品登録成功" }, { status: 201 })
     } catch (error) {
       console.log(error)
       if (isUniqueViolation(error, "dish_ingredients")) {
         return NextResponse.json({ message: "同じ食材が複数の行で選ばれています" }, { status: 400 })
+      }
+      if (isUniqueViolation(error, "dish_categories")) {
+        return NextResponse.json({ message: "同じカテゴリーが重複して選ばれています" }, { status: 400 })
       }
       if (isUniqueViolation(error)) {
         return NextResponse.json({ message: "同じ名前の商品が既に登録されています" }, { status: 400 })
@@ -99,14 +115,15 @@ export async function GET(request: Request) {
     try {
       const { data, error } = await supabase
         .from("dishes")
-        .select("*, categories(id, name), dish_ingredients(quantity, ingredients(purchase_price, purchase_quantity))")
+        .select("*, dish_categories(categories(id, name)), dish_ingredients(quantity, ingredients(purchase_price, purchase_quantity))")
         .eq("user_id", payload.userId)
         .order("created_at", { ascending: false })
       if (error) throw new DbError(error)
       const rows = data as DishListRow[]
       const dishesWithCost = rows.map((dish) => {
         const cost = calcDishCost(dish.dish_ingredients)
-        return { ...dish, totalCost: cost }
+        const categories = dish.dish_categories.map((row) => row.categories)
+        return { ...dish, totalCost: cost, categories: categories }
       })
       return NextResponse.json({
         message: "商品一覧の取得成功",

@@ -20,7 +20,7 @@ export async function GET(request: Request, context: Context) {
       const params = await context.params
       const { data, error } = await supabase
         .from("dishes")
-        .select("*, dish_ingredients(id, ingredient_id, quantity, ingredients(name, unit, purchase_price, purchase_quantity))")
+        .select("*, dish_categories(category_id), dish_ingredients(id, ingredient_id, quantity, ingredients(name, unit, purchase_price, purchase_quantity))")
         .eq("id", params.id)
         .eq("user_id", payload.userId)
         .single()
@@ -66,11 +66,11 @@ export async function PUT(request: Request, context: Context) {
         }
       }
 
-      if (result.data.categoryId) {
+      for (const categoryId of result.data.categoryIds) {
         const { error: categoryError } = await supabase
           .from("categories")
           .select("id")
-          .eq("id", result.data.categoryId)
+          .eq("id", categoryId)
           .eq("user_id", payload.userId)
           .single()
 
@@ -81,7 +81,7 @@ export async function PUT(request: Request, context: Context) {
 
       const { data: oldDish, error: oldError } = await supabase
         .from("dishes")
-        .select("id, dish_ingredients(ingredient_id, quantity)")
+        .select("id, dish_ingredients(ingredient_id, quantity), dish_categories(category_id)")
         .eq("id", params.id)
         .eq("user_id", payload.userId)
         .single()
@@ -96,8 +96,7 @@ export async function PUT(request: Request, context: Context) {
         .from("dishes")
         .update({
           name: result.data.name,
-          selling_price: result.data.sellingPrice,
-          category_id: result.data.categoryId ?? null
+          selling_price: result.data.sellingPrice
         })
         .eq("id", params.id)
         .eq("user_id", payload.userId)
@@ -124,11 +123,39 @@ export async function PUT(request: Request, context: Context) {
         )
         throw new DbError(itemError)
       }
+
+      await supabase
+        .from("dish_categories")
+        .delete()
+        .eq("dish_id", params.id)
+      if (result.data.categoryIds.length > 0) {
+        const categoryRows = result.data.categoryIds.map((categoryId) => ({
+          dish_id: Number(params.id),
+          category_id: categoryId
+        }))
+        const { error: categoryInsertError } = await supabase
+          .from("dish_categories")
+          .insert(categoryRows)
+        if (categoryInsertError) {
+          if (previousDish.dish_categories.length > 0) {
+            await supabase.from("dish_categories").insert(
+              previousDish.dish_categories.map((old) => ({
+                dish_id: Number(params.id),
+                category_id: old.category_id
+              }))
+            )
+          }
+          throw new DbError(categoryInsertError)
+        }
+      }
       return NextResponse.json({ message: "商品編集成功" }, { status: 200 })
     } catch (error) {
       console.log(error)
       if (isUniqueViolation(error, "dish_ingredients")) {
         return NextResponse.json({ message: "同じ食材が複数の行で選ばれています" }, { status: 400 })
+      }
+      if (isUniqueViolation(error, "dish_categories")) {
+        return NextResponse.json({ message: "同じカテゴリーが重複して選ばれています" }, { status: 400 })
       }
       if (isUniqueViolation(error)) {
         return NextResponse.json({ message: "同じ名前の商品が既に登録されています" }, { status: 400 })

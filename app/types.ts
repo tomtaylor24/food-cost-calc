@@ -3,7 +3,6 @@ export type Dish = {
   user_id: string,
   name: string,
   selling_price: number | null,
-  category_id: number | null,
   created_at: string
 }
 
@@ -12,7 +11,7 @@ export type DishWithCost = Dish & {
   categories: {
     id: number,
     name: string
-  } | null
+  }[]
 }
 
 export type Ingredient = {
@@ -31,6 +30,9 @@ export type RecipeRow = {
 }
 
 export type DishDetail = Dish & {
+  dish_categories: {
+    category_id: number
+  }[]
   dish_ingredients: {
     id: number
     ingredient_id: number
@@ -59,7 +61,9 @@ export type User = {
 }
 
 export type DishListRow = Dish & {
-  categories: { id: number, name: string } | null
+  dish_categories: {
+    categories: { id: number, name: string }
+  }[]
   dish_ingredients: {
     quantity: number
     ingredients: {
@@ -74,5 +78,8 @@ export type OldDishRow = {
   dish_ingredients: {
     ingredient_id: number
     quantity: number
+  }[]
+  dish_categories: {
+    category_id: number
   }[]
 }

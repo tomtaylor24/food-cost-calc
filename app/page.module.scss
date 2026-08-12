@@ -1,0 +1,749 @@
+@use "./styles/mixin" as *;
+@use "./styles/setting" as *;
+
+$hero: #F4F7FB;
+$mockBorder: #E8ECF3;
+
+.lp{
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+}
+
+.inner{
+  width: min(100% - 48px, 1040px);
+  margin-inline: auto;
+  @include sp{
+    width: min(100% - 32px, 1040px);
+  }
+}
+
+.header{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid $border;
+  background: $white;
+}
+
+.headerInner{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 62px;
+  @include sp{
+    height: 56px;
+  }
+}
+
+.logo{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logoName{
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1.2;
+  letter-spacing: .01em;
+  @include sp{
+    font-size: 18px;
+  }
+}
+
+.logoRead{
+  color: #A5AEBC;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: .04em;
+}
+
+.nav{
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  @include sp{
+    gap: 14px;
+  }
+}
+
+.navList{
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  @include sp{
+    gap: 14px;
+  }
+}
+
+.navLink{
+  color: $text;
+  font-size: 13px;
+  &:hover{
+    color: $main;
+    opacity: 1;
+  }
+}
+
+.navRegister{
+  padding: 9px 18px;
+  border: 1px solid $border;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: bold;
+  transition: border-color .2s, color .2s;
+  &:hover{
+    border-color: $main;
+    color: $main;
+    opacity: 1;
+  }
+  @include sp{
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+}
+
+.hero{
+  overflow: hidden;
+  padding: 76px 0 88px;
+  background: $hero;
+  @include sp{
+    padding: 32px 0 40px;
+  }
+}
+
+.heroInner{
+  display: grid;
+  grid-template-columns: minmax(0, 430px) minmax(0, 1fr);
+  align-items: center;
+  gap: 64px;
+  @include sp{
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+}
+
+.heroTitle{
+  font-size: 33px;
+  font-weight: bold;
+  line-height: 1.45;
+  letter-spacing: .01em;
+  @include sp{
+    font-size: 23px;
+    line-height: 1.5;
+  }
+}
+
+.heroTitleLine{
+  display: block;
+  & + &{
+    margin-top: 8px;
+  }
+  @include sp{
+    & + &{
+      margin-top: 5px;
+    }
+  }
+}
+
+.heroText{
+  margin-top: 20px;
+  color: $text;
+  font-size: 14px;
+  line-height: 1.9;
+  @include sp{
+    margin-top: 16px;
+    font-size: 13px;
+    line-height: 1.85;
+  }
+}
+
+.heroActions{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+  @include sp{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 24px;
+  }
+}
+
+.heroPrimary{
+  padding: 14px 25px;
+  border: 1px solid $main;
+  font-size: 14px;
+  transition: background .2s, color .2s;
+  &:hover:not(:disabled){
+    background: $white;
+    color: $main;
+  }
+  &:disabled{
+    opacity: .6;
+    cursor: default;
+  }
+}
+
+.heroSecondary{
+  padding: 15px 34px;
+  border: 1px solid $border;
+  border-radius: 8px;
+  background: $white;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  transition: border-color .2s, color .2s;
+  &:hover{
+    border-color: $main;
+    color: $main;
+    opacity: 1;
+  }
+}
+
+.heroNote{
+  margin-top: 16px;
+  color: #A5AEBC;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.heroMock{
+  min-width: 720px;
+  @include sp{
+    min-width: 0;
+  }
+}
+
+.mockApp{
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  border: 1px solid $mockBorder;
+  border-radius: 12px;
+  background: $white;
+  box-shadow: 0 16px 40px rgba(23, 43, 77, .1);
+  overflow: hidden;
+  @include sp{
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.mockSide{
+  padding: 18px 14px;
+  border-right: 1px solid $mockBorder;
+  background: #FCFDFE;
+  @include sp{
+    display: none;
+  }
+}
+
+.mockSideTitle{
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.mockSideNav{
+  display: grid;
+  gap: 2px;
+  margin-top: 16px;
+  li{
+    padding: 7px 10px;
+    border-radius: 6px;
+    color: $text;
+    font-size: 11px;
+  }
+}
+
+.mockSideActive{
+  background: #E8EFFD;
+  color: $main !important;
+  font-weight: bold;
+}
+
+.mockMain{
+  padding: 18px;
+  @include sp{
+    padding: 14px;
+  }
+}
+
+.mockMainHead{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mockMainTitle{
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.mockMainText{
+  margin-top: 3px;
+  color: $text;
+  font-size: 10px;
+}
+
+.mockMainBtn{
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: 6px;
+  background: $main;
+  color: $white;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.mockChips{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+  li{
+    padding: 5px 12px;
+    border: 1px solid $mockBorder;
+    border-radius: 999px;
+    color: $text;
+    font-size: 10px;
+  }
+}
+
+.mockChipActive{
+  border-color: $main !important;
+  background: $main;
+  color: $white !important;
+  font-weight: bold;
+}
+
+.mockSummary{
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid $mockBorder;
+  border-radius: 8px;
+  background: #FAFBFD;
+}
+
+.mockSummaryCount,
+.mockSummaryLabel{
+  color: $text;
+  font-size: 10px;
+}
+
+.mockSummaryRate{
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.mockTable{
+  margin-top: 8px;
+}
+
+.mockHead,
+.mockRow{
+  display: grid;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 4px;
+  div + div{
+    text-align: right;
+  }
+}
+
+.mockHead4,
+.mockRow4{
+  grid-template-columns: minmax(0, 1fr) 62px 58px 46px;
+}
+
+.mockHead3,
+.mockRow3{
+  grid-template-columns: minmax(0, 1fr) 68px 56px;
+}
+
+.mockRow2{
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.mockHead{
+  color: $text;
+  font-size: 10px;
+}
+
+.mockRow{
+  border-top: 1px solid $mockBorder;
+  color: $text;
+  font-size: 11px;
+  div:first-child{
+    overflow: hidden;
+    color: $black;
+    font-weight: bold;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  div:last-child{
+    color: $black;
+    font-weight: bold;
+  }
+}
+
+.mockHigh{
+  color: $red !important;
+}
+
+.mockNote{
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed $mockBorder;
+  color: $text;
+  font-size: 10px;
+}
+
+.mockBefore{
+  color: $text;
+}
+
+.mockArrow{
+  margin: 0 6px;
+  color: #C3CAD6;
+}
+
+.mockAfter{
+  color: $main;
+  font-weight: bold;
+}
+
+.mockSort{
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mockSortLabel{
+  color: $text;
+  font-size: 10px;
+}
+
+.mockSortSelect{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid $mockBorder;
+  border-radius: 6px;
+  color: $black;
+  font-size: 10px;
+  &::after{
+    content: "▾";
+    color: $text;
+  }
+}
+
+.mock{
+  padding: 18px;
+  border: 1px solid $mockBorder;
+  border-radius: 12px;
+  background: $white;
+  box-shadow: 0 10px 28px rgba(23, 43, 77, .06);
+  @include sp{
+    padding: 14px;
+  }
+}
+
+.sectionTitle{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $border;
+  font-size: 20px;
+  font-weight: bold;
+  scroll-margin-top: 86px;
+  &::before{
+    content: "";
+    flex-shrink: 0;
+    width: 4px;
+    height: 1.5em;
+    border-radius: 2px;
+    background: $main;
+  }
+  @include sp{
+    padding-bottom: 14px;
+    font-size: 17px;
+    scroll-margin-top: 74px;
+  }
+}
+
+.flow{
+  padding: 76px 0 0;
+  @include sp{
+    padding-top: 44px;
+  }
+}
+
+.flowList{
+  margin-top: 36px;
+  @include sp{
+    margin-top: 26px;
+  }
+}
+
+.flowItem{
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  column-gap: 18px;
+  &:not(:last-child){
+    padding-bottom: 36px;
+    &::before{
+      content: "";
+      position: absolute;
+      top: 46px;
+      bottom: 6px;
+      left: 19.5px;
+      width: 1px;
+      background: $border;
+    }
+  }
+  @include sp{
+    column-gap: 14px;
+    &:not(:last-child){
+      padding-bottom: 28px;
+    }
+  }
+}
+
+.flowNumber{
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid $main;
+  border-radius: 50%;
+  background: $white;
+  color: $main;
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: .02em;
+  @include sp{
+    font-size: 14px;
+  }
+}
+
+.flowTitle{
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  font-size: 17px;
+  font-weight: bold;
+  line-height: 1.5;
+  @include sp{
+    font-size: 15px;
+  }
+}
+
+.flowText{
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 4px;
+  color: $text;
+  font-size: 13px;
+  line-height: 2;
+  @include sp{
+    font-size: 12px;
+    line-height: 1.9;
+  }
+}
+
+.features{
+  padding: 64px 0 0;
+  @include sp{
+    padding-top: 40px;
+  }
+}
+
+.featureList{
+  display: grid;
+  gap: 56px;
+  margin-top: 40px;
+  @include sp{
+    gap: 40px;
+    margin-top: 26px;
+  }
+}
+
+.featureItem{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 56px;
+  @include sp{
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+}
+
+.featureHead{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  @include sp{
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+
+.featureNumber{
+  color: $main;
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: .02em;
+  line-height: 1.1;
+  @include sp{
+    font-size: 24px;
+  }
+}
+
+.featureTitle{
+  font-size: 17px;
+  font-weight: bold;
+  line-height: 1.5;
+  @include sp{
+    font-size: 15px;
+  }
+}
+
+.featureText{
+  margin-top: 16px;
+  color: $text;
+  font-size: 13px;
+  line-height: 2;
+  @include sp{
+    margin-top: 12px;
+    font-size: 12px;
+    line-height: 1.9;
+  }
+}
+
+.cta{
+  padding: 72px 0 0;
+  @include sp{
+    padding-top: 44px;
+  }
+}
+
+.ctaBox{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 34px 40px;
+  border-radius: 12px;
+  background: $hero;
+  @include sp{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+    padding: 24px 20px;
+  }
+}
+
+.ctaTitle{
+  font-size: 19px;
+  font-weight: bold;
+  @include sp{
+    font-size: 16px;
+  }
+}
+
+.ctaText{
+  margin-top: 10px;
+  color: $text;
+  font-size: 13px;
+  line-height: 1.9;
+  @include sp{
+    margin-top: 8px;
+    font-size: 12px;
+  }
+}
+
+.ctaBtn{
+  flex-shrink: 0;
+  padding: 14px 25px;
+  border: 1px solid $main;
+  font-size: 14px;
+  transition: background .2s, color .2s;
+  &:hover:not(:disabled){
+    background: $white;
+    color: $main;
+  }
+  &:disabled{
+    opacity: .6;
+    cursor: default;
+  }
+}
+
+.tech{
+  padding: 72px 0 0;
+  @include sp{
+    padding-top: 44px;
+  }
+}
+
+.techList{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 26px;
+  @include sp{
+    margin-top: 20px;
+  }
+}
+
+.techItem{
+  padding: 8px 14px;
+  border: 1px solid $border;
+  border-radius: 6px;
+  color: #5B616B;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.techLink{
+  display: inline-block;
+  margin-top: 28px;
+  padding: 13px 26px;
+  border: 1px solid $border;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: bold;
+  transition: border-color .2s, color .2s;
+  &:hover{
+    border-color: $main;
+    color: $main;
+    opacity: 1;
+  }
+}
+
+.footer{
+  margin-top: 80px;
+  padding: 24px 0;
+  border-top: 1px solid $border;
+  @include sp{
+    margin-top: 48px;
+  }
+}
+
+.footerText{
+  color: #A5AEBC;
+  font-size: 11px;
+}

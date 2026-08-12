@@ -9,7 +9,7 @@ export const ingredientSchema = z.object({
 
 export const dishSchema = z.object({
   name: z.string().trim().min(1, "商品名を入力してください").max(30, "商品名は30文字以内にしてください"),
-  categoryId: z.coerce.number().int().positive().nullable().optional(),
+  categoryIds: z.array(z.coerce.number().int().positive()).max(20, "カテゴリーは20個以内にしてください").optional().default([]),
   sellingPrice: z.coerce.number().min(0, "販売価格は0以上にしてください").nullable(),
   rows: z.array(
     z.object({
