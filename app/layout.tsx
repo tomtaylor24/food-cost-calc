@@ -17,7 +17,7 @@ const notoSansJP = Noto_Sans_JP({
 
 export const metadata: Metadata = {
   title: "Genkalc",
-  description: "飲食店向けの原価計算ツール。食材の仕入れ値から、商品ごとの原価と原価率を自動で計算します。",
+  description: "Genkalc（ゲンカルク）は飲食店向けの原価計算ツール。食材の仕入れ値から、商品ごとの原価と原価率を自動で計算します。",
 }
 
 const RootLayout = ({ children }: Props) => {

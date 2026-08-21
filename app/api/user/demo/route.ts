@@ -45,7 +45,7 @@ export async function POST() {
 
     const user = userData as User
     createdUserId = user.id
-
+    
     const { data: categoryData, error: categoryError } = await supabase
       .from("categories")
       .insert(DEMO_CATEGORIES.map((name) => ({ user_id: user.id, name: name })))

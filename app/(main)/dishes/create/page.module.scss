@@ -23,7 +23,6 @@ $rowCols: minmax(0, 1fr) 150px 110px 100px 32px;
   margin-top: 14px;
   border: 1px solid $border;
   border-radius: 12px;
-  overflow: hidden;
 }
 
 .rowsHead{
@@ -33,6 +32,7 @@ $rowCols: minmax(0, 1fr) 150px 110px 100px 32px;
   gap: 12px;
   padding: 13px 18px;
   border-bottom: 1px solid $border;
+  border-radius: 11px 11px 0 0;
   background: $bgSubtle;
   color: $text;
   font-size: 13px;

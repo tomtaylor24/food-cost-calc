@@ -420,8 +420,9 @@ dd {
   gap: 12px;
 }
 .sectionLabel{
-  font-size: 15px;
-  font-weight: bold;
+  color: $black;
+  font-size: 13px;
+  font-weight: 500;
 }
 .sectionNote{
   color: $text;
@@ -477,7 +478,9 @@ dd {
     gap: 8px;
   }
   dt{
-    color: $text;
+    color: $black;
+    font-size: 13px;
+    font-weight: 500;
   }
 }
 
@@ -645,7 +648,9 @@ dd {
       gap: 8px;
     }
     dt{
-      color: $text;
+      color: $black;
+      font-size: 13px;
+      font-weight: 500;
     }
     dd{
       input{
