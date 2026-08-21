@@ -4,7 +4,7 @@ import verifyToken from "@/app/utils/verifyToken"
 import { dishSchema } from "@/app/utils/schemas"
 import readJson from "@/app/utils/readJson"
 import type { OldDishRow } from "@/app/types"
-import { DbError, isUniqueViolation } from "@/app/utils/dbError"
+import { DbError, isUniqueViolation, isNotFound } from "@/app/utils/dbError"
 
 type Context = {
   params: Promise<{ id: string }>
@@ -31,7 +31,10 @@ export async function GET(request: Request, context: Context) {
       }, { status: 200 })
     } catch (error) {
       console.log(error)
-      return NextResponse.json({ message: "商品詳細取得失敗" }, { status: 404 })
+      if (isNotFound(error)) {
+        return NextResponse.json({ message: "商品が見つかりません" }, { status: 404 })
+      }
+      return NextResponse.json({ message: "商品の取得に失敗しました" }, { status: 500 })
     }
   }
 }
@@ -45,7 +48,7 @@ export async function PUT(request: Request, context: Context) {
     try {
       const reqBody = await readJson(request)
       if (reqBody === null) {
-      return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
+        return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
       }
       const params = await context.params
       const result = dishSchema.safeParse(reqBody)
@@ -114,7 +117,9 @@ export async function PUT(request: Request, context: Context) {
         .from("dish_ingredients")
         .insert(items)
       if (itemError) {
-        await supabase.from("dish_ingredients").insert(
+        await supabase
+        .from("dish_ingredients")
+        .insert(
           previousDish.dish_ingredients.map((old) => ({
             dish_id: Number(params.id),
             ingredient_id: old.ingredient_id,

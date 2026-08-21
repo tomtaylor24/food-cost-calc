@@ -8,7 +8,7 @@ if(!supabaseUrl){
 }
 
 if(!supabaseKey){
-  throw new Error("supabaseKetが.envに設定されていません")
+  throw new Error("supabaseKeyが.envに設定されていません")
 }
 
 const supabase = createClient(

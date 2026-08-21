@@ -10,83 +10,152 @@
 
 .legend{
   padding: 0;
-  color: $text;
 }
 
-.chipGroup{
+.box{
+  margin-top: 14px;
+  padding: 18px;
+  border: 1px solid $border;
+  border-radius: 12px;
+  @include sp{
+    padding: 14px;
+  }
+}
+
+.selected{
   display: flex;
   align-items: center;
-  span{
-    padding-right: 34px;
-  }
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $border;
 }
 
-.chipDelete,
-.chipAdd{
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  margin-left: -28px;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
+.selectedLabel{
+  color: $text;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.selectedEmpty{
+  color: $textLight;
+  font-size: 13px;
+}
+
+.selectedChip{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 6px 14px;
+  border: 1px solid rgba($main, .35);
+  border-radius: 999px;
+  background: $mainSoft;
+  color: $main;
   font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  transition: background .2s, color .2s;
-}
-
-.chipDelete{
-  color: rgba($white, .7);
+  font-weight: bold;
+  line-height: 1.4;
+  transition: background .2s;
   &:hover{
-    background: rgba($white, .25);
-    color: $white;
+    background: rgba($main, .14);
   }
-  &:focus-visible{
-    outline: 2px solid $white;
-    outline-offset: 1px;
+  span{
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1;
   }
 }
 
-.chipAdd{
-  color: #C3CAD6;
+.rest{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 16px;
+}
+
+.restChip{
+  padding: 7px 16px;
+  border: 1px solid $border;
+  border-radius: 999px;
+  background: $white;
+  color: $text;
+  font-size: 14px;
+  line-height: 1.4;
+  transition: border-color .2s, color .2s;
   &:hover{
-    background: rgba($main, .1);
+    border-color: $main;
     color: $main;
+  }
+}
+
+.editChip{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px 7px 16px;
+  border: 1px solid $border;
+  border-radius: 999px;
+  background: $white;
+  color: $text;
+  font-size: 14px;
+  line-height: 1.4;
+  transition: border-color .2s, background .2s, color .2s;
+  &:hover{
+    border-color: $red;
+    background: rgba($red, .06);
+    color: $red;
+  }
+  span{
+    font-size: 13px;
+    line-height: 1;
   }
 }
 
 .add{
   display: flex;
-  gap: 8px;
-  margin-top: 12px;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid $border;
   input{
     flex: 1;
     min-width: 0;
-    max-width: 240px;
-    padding: 8px 12px;
+    max-width: 260px;
+    padding: 10px 14px;
     border: 1px solid $border;
     border-radius: 8px;
     font-size: 14px;
+    transition: border-color .2s;
     &:focus{
       border-color: $main;
-      outline: none;
     }
   }
   button{
-    padding: 9px 14px;
+    padding: 11px 18px;
     border: 1px solid $border;
     border-radius: 8px;
     background: $white;
     color: $black;
     font-size: 13px;
     white-space: nowrap;
-    cursor: pointer;
     transition: border-color .2s, color .2s;
     &:hover{
       border-color: $main;
       color: $main;
     }
+  }
+}
+
+.editToggle{
+  margin-left: auto;
+  border: 0 !important;
+  padding: 0 !important;
+  color: $text !important;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  &:hover{
+    color: $main !important;
+    text-decoration: none;
   }
 }

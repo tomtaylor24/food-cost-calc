@@ -83,6 +83,13 @@ const DishesList = () => {
 
   const averageRate = sumPrice > 0 ? Math.round(sumCost / sumPrice * 1000) / 10 : null
 
+  const costRateOf = (dish: DishWithCost) => {
+    if (dish.selling_price === null || dish.selling_price === 0) return null
+    return Math.round(dish.totalCost / dish.selling_price * 1000) / 10
+  }
+
+  const hasUncategorized = dishes.some((dish) => dish.categories.length === 0)
+
   const sortValue = (dish: DishWithCost) => {
     if (sortKey === "price_desc" || sortKey === "price_asc") {
       return dish.selling_price
@@ -131,11 +138,13 @@ const DishesList = () => {
             <span>{category.name}</span>
           </label>
         ))}
-        <label className="chip">
-          <input type="radio" name="filter" value=""
-            checked={filterId === ""} onChange={(e) => setFilterId(e.target.value)} />
-          <span>未分類</span>
-        </label>
+        {(hasUncategorized || filterId === "") && (
+          <label className="chip">
+            <input type="radio" name="filter" value=""
+              checked={filterId === ""} onChange={(e) => setFilterId(e.target.value)} />
+            <span>未分類</span>
+          </label>
+        )}
       </div>
     </fieldset>
   )
@@ -154,18 +163,21 @@ const DishesList = () => {
             <Link href="/dishes/create" className="btn">+ 新しい商品を登録</Link>
           </div>
         </div>
-        <ul className={styles.table}>
-          {[...Array(5)].map((_, i) => (
-            <li className={styles.tableItem} key={i}>
-              <div className={styles.skeletonInner}>
-                <div><span /></div>
-                <div><span /></div>
-                <div><span /></div>
-                <div><span /></div>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="tableCard">
+          <ul>
+            {[...Array(5)].map((_, i) => (
+              <li className={styles.skeletonRow} key={i}>
+                <div className={styles.skeletonInner}>
+                  <div><span /></div>
+                  <div><span /></div>
+                  <div><span /></div>
+                  <div><span /></div>
+                  <div><span /></div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     )
   }
@@ -240,14 +252,20 @@ const DishesList = () => {
         </div>
       </div>
       {filterChips}
-      <div className={styles.summary}>
-        <p className={styles.summaryCount}>{visibleDishes.length}品</p>
-        {averageRate !== null && (
-          <p className={styles.summaryRate}>平均原価率 <span>{averageRate}%</span></p>
-        )}
-        {excludedCount > 0 && (
-          <p className={styles.summaryNote}>※売価未設定の{excludedCount}品を除く</p>
-        )}
+      <div className="stats">
+        <div className="statsItem">
+          <p className="statsLabel">表示中の商品</p>
+          <p className="statsValue">{visibleDishes.length}品</p>
+        </div>
+        <div className="statsItem">
+          <p className="statsLabel">平均原価率</p>
+          <p className={`statsValue ${averageRate !== null && averageRate >= 30 ? "statsHigh" : ""}`}>
+            {averageRate !== null ? `${averageRate}%` : "—"}
+          </p>
+          {excludedCount > 0 && (
+            <p className="statsNote">売価未設定の{excludedCount}品を除く</p>
+          )}
+        </div>
       </div>
 
       <div className={styles.sortWrap}>
@@ -270,33 +288,37 @@ const DishesList = () => {
         </select>
       </div>
 
-      <ul className={styles.table}>
-        <li className={`${styles.tableItem} ${styles.title}`}>
+      <div className="tableCard">
+        <div className={styles.head}>
           <div>料理名</div>
+          <div>カテゴリー</div>
           <div>売価</div>
           <div>原価</div>
           <div>原価率</div>
-        </li>
-        {sortedDishes.map((dish) => {
-          const costRate = dish.selling_price
-            ? Math.round(dish.totalCost / dish.selling_price * 100)
-            : null
-          return (
-            <li className={styles.tableItem} key={dish.id}>
-              <Link href={`/dishes/${dish.id}`}>
-                <div>{dish.name}</div>
-                <div>{dish.selling_price ? `￥${dish.selling_price.toLocaleString()}` : "—"}</div>
-                <div>￥{Math.round(dish.totalCost).toLocaleString()}</div>
-                <div>
-                  {costRate !== null && (
-                    <span className={costRate >= 30 ? styles.high : undefined}>{costRate}%</span>
-                  )}
-                </div>
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
+        </div>
+        <ul>
+          {sortedDishes.map((dish) => {
+            const rate = costRateOf(dish)
+            return (
+              <li className={styles.row} key={dish.id}>
+                <Link href={`/dishes/${dish.id}`}>
+                  <div>{dish.name}</div>
+                  <div className={styles.cats}>
+                    {dish.categories.map((category) => (
+                      <span key={category.id}>{category.name}</span>
+                    ))}
+                  </div>
+                  <div>{dish.selling_price !== null ? `￥${dish.selling_price.toLocaleString()}` : "—"}</div>
+                  <div>￥{Math.round(dish.totalCost).toLocaleString()}</div>
+                  <div className={rate !== null && rate >= 30 ? styles.high : undefined}>
+                    {rate !== null ? `${rate}%` : "—"}
+                  </div>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
     </div>
   )
 }

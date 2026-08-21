@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 import supabase from "@/app/utils/database";
 import { ingredientSchema } from "@/app/utils/schemas";
 import readJson from "@/app/utils/readJson";
-import { DbError, isUniqueViolation } from "@/app/utils/dbError";
+import { DbError, isUniqueViolation, isNotFound, isForeignKeyViolation } from "@/app/utils/dbError";
 
 type Context = {
-  params: Promise<{id: string}>
+  params: Promise<{ id: string }>
 }
 
 export async function GET(request: Request, context: Context) {
@@ -16,12 +16,20 @@ export async function GET(request: Request, context: Context) {
   } else {
     try {
       const params = await context.params
-      const { data, error } = await supabase.from("ingredients").select().eq("id", params.id).eq("user_id", payload.userId).single()
+      const { data, error } = await supabase
+        .from("ingredients")
+        .select()
+        .eq("id", params.id)
+        .eq("user_id", payload.userId)
+        .single()
       if (error) throw new DbError(error)
       return NextResponse.json({ message: "食材詳細取得成功", ingredient: data }, { status: 200 })
     } catch (error) {
       console.log(error)
-      return NextResponse.json({ message: "食材詳細取得失敗" }, { status: 404 })
+      if (isNotFound(error)) {
+        return NextResponse.json({ message: "食材が見つかりません" }, { status: 404 })
+      }
+      return NextResponse.json({ message: "食材の取得に失敗しました" }, { status: 500 })
     }
   }
 }
@@ -34,7 +42,7 @@ export async function PUT(request: Request, context: Context) {
     try {
       const reqBody = await readJson(request)
       if (reqBody === null) {
-      return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
+        return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
       }
       const params = await context.params
       const result = ingredientSchema.safeParse(reqBody)
@@ -50,11 +58,16 @@ export async function PUT(request: Request, context: Context) {
         })
         .eq("id", params.id)
         .eq("user_id", payload.userId)
+        .select()
+        .single()
       if (error) throw new DbError(error)
       return NextResponse.json({ message: "食材編集成功" }, { status: 200 })
     } catch (error) {
       if (isUniqueViolation(error)) {
         return NextResponse.json({ message: "同じ名前の食材が既に登録されています" }, { status: 400 })
+      }
+      if (isNotFound(error)) {
+        return NextResponse.json({ message: "食材が見つかりません" }, { status: 404 })
       }
       return NextResponse.json({ message: "食材編集に失敗しました" }, { status: 500 })
     }
@@ -76,7 +89,10 @@ export async function DELETE(request: Request, context: Context) {
       return NextResponse.json({ message: "食材削除成功" }, { status: 200 })
     } catch (error) {
       console.log(error)
-      return NextResponse.json({ message: "食材削除失敗"}, { status: 500 })
+      if (isForeignKeyViolation(error)) {
+        return NextResponse.json({ message: "この食材は商品で使われているため削除できません" }, { status: 400 })
+      }
+      return NextResponse.json({ message: "食材の削除に失敗しました" }, { status: 500 })
     }
   }
 }

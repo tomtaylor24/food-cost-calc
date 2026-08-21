@@ -51,17 +51,20 @@ const IngredientsList = () => {
             <Link href="/ingredients/create" className="btn">+ 新しい食材を登録</Link>
           </div>
         </div>
-        <ul className={styles.table}>
-          {[...Array(5)].map((_, i) => (
-            <li className={styles.tableItem} key={i}>
-              <div className={styles.skeletonInner}>
-                <div><span /></div>
-                <div><span /></div>
-                <div><span /></div>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="tableCard">
+          <ul>
+            {[...Array(5)].map((_, i) => (
+              <li className={styles.skeletonRow} key={i}>
+                <div className={styles.skeletonInner}>
+                  <div><span /></div>
+                  <div><span /></div>
+                  <div><span /></div>
+                  <div><span /></div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     )
   }
@@ -113,22 +116,27 @@ const IngredientsList = () => {
           <Link href="/ingredients/create" className="btn">+ 新しい食材を登録</Link>
         </div>
       </div>
-      <ul className={styles.table}>
-        <li className={`${styles.tableItem} ${styles.title}`}>
+      <p className="tableCount">全{ingredients.length}件</p>
+      <div className="tableCard">
+        <div className={styles.head}>
           <div>食材名</div>
           <div>仕入れ値</div>
           <div>仕入れ量</div>
-        </li>
-        {ingredients.map((ingredient) => (
-          <li className={styles.tableItem} key={ingredient.id}>
-            <Link href={`/ingredients/${ingredient.id}`}>
-              <div>{ingredient.name}</div>
-              <div>￥{ingredient.purchase_price.toLocaleString()}</div>
-              <div>{ingredient.purchase_quantity.toLocaleString()}{ingredient.unit}</div>
-            </Link>
-          </li>
-        ))}
-      </ul>
+          <div>単価</div>
+        </div>
+        <ul>
+          {ingredients.map((ingredient) => (
+            <li className={styles.row} key={ingredient.id}>
+              <Link href={`/ingredients/${ingredient.id}`}>
+                <div>{ingredient.name}</div>
+                <div>￥{ingredient.purchase_price.toLocaleString()}</div>
+                <div>{ingredient.purchase_quantity.toLocaleString()}{ingredient.unit}</div>
+                <div>￥{(ingredient.purchase_price / ingredient.purchase_quantity).toFixed(2)} / {ingredient.unit}</div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   )
 

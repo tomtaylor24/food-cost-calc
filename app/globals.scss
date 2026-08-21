@@ -171,14 +171,18 @@ dd {
   }
 }
 .container{
-  padding: 40px 48px;
+  padding: 44px 48px 80px;
   @include sp{
-    padding: 20px 16px;
+    padding: 20px 16px 40px;
   }
 }
 .pageMain{
   display: flex;
   align-items: center;
+  @include narrow{
+    flex-wrap: wrap;
+    gap: 14px;
+  }
 }
 .emptyState{
   margin-top: 32px;
@@ -246,9 +250,10 @@ dd {
     color: $main;
   }
   input:checked + span{
-    border-color: $main;
-    background: $main;
-    color: $white;
+    border-color: rgba($main, .35);
+    background: $mainSoft;
+    color: $main;
+    font-weight: bold;
   }
   input:focus-visible + span{
     outline: 2px solid $main;
@@ -311,25 +316,28 @@ dd {
 }
 .pageHeading{
   display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 .pageTitle{
-  font-size: 22px;
+  font-size: 28px;
   font-weight: bold;
+  letter-spacing: .01em;
   @include sp{
-    font-size: 18px;
+    font-size: 20px;
   }
 }
 .pageDescription{
   color: $text;
-  @include sp{
-    display: none;
-  }
+  font-size: 13px;
 }
 .pageBtns{
   margin-left: auto;
   display: grid;
   gap: 8px;
+  .btn{
+    padding: 14px 22px;
+    white-space: nowrap;
+  }
   @include sp{
     .btn{
       padding: 10px 14px;
@@ -342,10 +350,97 @@ dd {
   max-width: 100%;
   text-align: center;
   background: $main;
-  padding: 14px;
+  padding: 13px 20px;
   border-radius: 8px;
   color: #fff;
+  font-size: 14px;
   font-weight: bold;
+  transition: opacity .2s;
+  &:hover{
+    opacity: .88;
+  }
+}
+
+// 統計行（商品一覧・商品編集）
+.stats{
+  display: flex;
+  margin-top: 28px;
+  padding: 22px 0;
+  border-top: 1px solid $border;
+  border-bottom: 1px solid $border;
+  @include sp{
+    margin-top: 18px;
+    padding: 16px 0;
+  }
+}
+.statsItem{
+  flex: 1;
+  min-width: 0;
+  & + &{
+    padding-left: 32px;
+    border-left: 1px solid $border;
+    @include sp{
+      padding-left: 16px;
+    }
+  }
+}
+.statsLabel{
+  color: $text;
+  font-size: 13px;
+  @include sp{
+    font-size: 11px;
+  }
+}
+.statsValue{
+  margin-top: 6px;
+  font-size: 26px;
+  font-weight: bold;
+  @include narrow{
+    font-size: 21px;
+  }
+  @include sp{
+    margin-top: 4px;
+    font-size: 19px;
+  }
+}
+.statsHigh{
+  color: $red;
+}
+.statsNote{
+  margin-top: 6px;
+  color: $textLight;
+  font-size: 11px;
+}
+
+// セクション見出し（ラベル ＋ 右の注記）
+.sectionHead{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sectionLabel{
+  font-size: 15px;
+  font-weight: bold;
+}
+.sectionNote{
+  color: $text;
+  font-size: 12px;
+  text-align: right;
+}
+
+// テーブル風の枠
+.tableCard{
+  margin-top: 16px;
+  border: 1px solid $border;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.tableCount{
+  margin-top: 24px;
+  color: $text;
+  font-size: 13px;
+  text-align: right;
 }
 
 .breadcrumb{
@@ -388,20 +483,28 @@ dd {
 
 .formInput{
   width: 100%;
-  padding: 10px;
+  padding: 12px 14px;
   border: 1px solid $border;
   border-radius: 8px;
   font-size: 14px;
+  transition: border-color .2s;
+  &:focus{
+    border-color: $main;
+  }
 }
 
 .formField{
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px;
+  gap: 8px;
+  padding: 12px 14px;
   border: 1px solid $border;
   border-radius: 8px;
   color: $text;
+  transition: border-color .2s;
+  &:focus-within{
+    border-color: $main;
+  }
   input{
     flex: 1;
     min-width: 0;
@@ -412,15 +515,19 @@ dd {
 
 .formSelect{
   width: 100%;
-  padding: 10px 30px 10px 10px;
+  padding: 12px 34px 12px 14px;
   border: 1px solid $border;
   border-radius: 8px;
   font-size: 14px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='%23888888' d='M0 0h12L6 8z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7280' d='M1.4 1.6 6 6.2l4.6-4.6'  stroke='%236B7280' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 10px;
+  background-position: right 13px center;
+  background-size: 11px;
   cursor: pointer;
+  transition: border-color .2s;
+  &:focus{
+    border-color: $main;
+  }
 }
 
 .formBtns{
@@ -439,29 +546,41 @@ dd {
 }
 
 .formSubmit{
-  padding: 12px 24px;
-  font-size: 13px;
+  padding: 13px 26px;
+  font-size: 14px;
   @include sp{
     width: 100%;
   }
 }
 
 .formCancel{
-  padding: 12px 24px;
+  padding: 13px 26px;
   border: 1px solid $border;
   border-radius: 8px;
-  font-size: 13px;
+  background: $white;
+  font-size: 14px;
   font-weight: bold;
+  transition: border-color .2s, color .2s;
+  &:hover{
+    border-color: $main;
+    color: $main;
+    opacity: 1;
+  }
 }
 
 .formDelete{
-  padding: 12px 24px;
-  border: 1px solid $border;
+  padding: 13px 26px;
+  border: 1px solid rgba($red, .35);
   border-radius: 8px;
-  background: #fff;
+  background: $white;
   color: $red;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: bold;
+  transition: border-color .2s, background .2s;
+  &:hover{
+    border-color: $red;
+    background: rgba($red, .04);
+  }
 }
 
 .pageActions{

@@ -2,20 +2,20 @@
 @use "../../../styles/setting" as *;
 
 .form{
-  max-width: 480px;
+  max-width: 680px;
 }
 
 .formRow{
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
-  @include sp{
+  @include narrow{
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
 .quantity{
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 110px;
+  grid-template-columns: minmax(0, 1fr) 120px;
   gap: 10px;
 }

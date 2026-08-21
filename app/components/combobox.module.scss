@@ -8,15 +8,16 @@
 
 .input{
   width: 100%;
-  padding: 10px 30px 10px 10px;
+  padding: 12px 34px 12px 14px;
   border: 1px solid $border;
   border-radius: 8px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='%23888888' d='M0 0h12L6 8z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.4 1.6 6 6.2l4.6-4.6' stroke='%236B7280' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 10px;
+  background-position: right 13px center;
+  background-size: 11px;
   font-size: 14px;
   cursor: pointer;
+  transition: border-color .2s;
   &:focus{
     border-color: $main;
     outline: none;

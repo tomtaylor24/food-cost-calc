@@ -12,6 +12,7 @@ type Props = {
 const CategorySelect = ({ value, onChange }: Props) => {
   const [categories, setCategories] = useState<Category[]>([])
   const [newCategory, setNewCategory] = useState("")
+  const [isEditing, setIsEditing] = useState(false)
 
   useEffect(() => {
     const getCategories = async () => {
@@ -74,8 +75,12 @@ const CategorySelect = ({ value, onChange }: Props) => {
       const jsonData = await response.json()
       if (response.ok) {
         toast.success(jsonData.message)
-        setCategories(categories.filter((category) => category.id !== id))
+        const rest = categories.filter((category) => category.id !== id)
+        setCategories(rest)
         onChange(value.filter((selected) => selected !== String(id)))
+        if (rest.length === 0) {
+          setIsEditing(false)
+        }
       } else {
         toast.error(jsonData.message)
       }
@@ -92,33 +97,71 @@ const CategorySelect = ({ value, onChange }: Props) => {
     }
   }
 
+  const selectedCategories = categories.filter((category) => value.includes(String(category.id)))
+  const restCategories = categories.filter((category) => !value.includes(String(category.id)))
+
   return (
     <fieldset className={styles.category}>
-      <legend className={styles.legend}>カテゴリー（複数選択できます）</legend>
-      <div className="chips">
-        {categories.map((category) => (
-          <div className={styles.chipGroup} key={category.id}>
-            <label className="chip">
-              <input type="checkbox" value={String(category.id)}
-                checked={value.includes(String(category.id))}
-                onChange={(e) => toggleCategory(e.target.value)} />
-              <span>{category.name}</span>
-            </label>
-            {value.includes(String(category.id)) ? (
-              <button type="button" className={styles.chipDelete}
-                onClick={() => handleDeleteCategory(category.id)}
-                aria-label={`${category.name}を削除`}>×</button>
-            ) : (
-              <button type="button" className={styles.chipAdd} tabIndex={-1} aria-hidden="true"
-                onClick={() => toggleCategory(String(category.id))}>＋</button>
-            )}
-          </div>
-        ))}
+      <div className="sectionHead">
+        <legend className={`sectionLabel ${styles.legend}`}>カテゴリー</legend>
+        <p className="sectionNote">{isEditing ? "クリックすると削除されます" : "複数選択できます"}</p>
       </div>
-      <div className={styles.add}>
-        <input type="text" value={newCategory} onChange={(e) => setNewCategory(e.target.value)}
-          placeholder="新しいカテゴリー名" maxLength={20} />
-        <button type="button" onClick={handleAddCategory}>+ 追加</button>
+
+      <div className={styles.box}>
+        {isEditing ? (
+          <div className={styles.rest}>
+            {categories.map((category) => (
+              <button type="button" className={styles.editChip} key={category.id}
+                onClick={() => handleDeleteCategory(category.id)}>
+                {category.name}
+                <span aria-hidden="true">×</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className={styles.selected}>
+              <p className={styles.selectedLabel}>選択中</p>
+              {selectedCategories.length === 0 ? (
+                <p className={styles.selectedEmpty}>なし</p>
+              ) : (
+                selectedCategories.map((category) => (
+                  <button type="button" className={styles.selectedChip} key={category.id}
+                    onClick={() => toggleCategory(String(category.id))}
+                    aria-label={`${category.name}の選択を外す`}>
+                    {category.name}
+                    <span aria-hidden="true">×</span>
+                  </button>
+                ))
+              )}
+            </div>
+            <div className={styles.rest}>
+              {restCategories.map((category) => (
+                <button type="button" className={styles.restChip} key={category.id}
+                  onClick={() => toggleCategory(String(category.id))}
+                  aria-label={`${category.name}を選ぶ`}>
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        <div className={styles.add}>
+          {isEditing ? (
+            <button type="button" onClick={() => setIsEditing(false)}>完了</button>
+          ) : (
+            <>
+              <input type="text" value={newCategory} onChange={(e) => setNewCategory(e.target.value)}
+                placeholder="新しいカテゴリー名" maxLength={20} />
+              <button type="button" onClick={handleAddCategory}>追加</button>
+              {categories.length > 0 && (
+                <button type="button" className={styles.editToggle}
+                  onClick={() => setIsEditing(true)}>カテゴリーを編集</button>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </fieldset>
   )

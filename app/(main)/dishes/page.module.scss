@@ -1,174 +1,23 @@
 @use "../../styles/mixin" as *;
 @use "../../styles/setting" as *;
 
-.table{
-  margin-top: 32px;
-  @include sp{
-    margin-top: 20px;
-  }
-}
-
-.tableItem{
-  color: $text;
-  font-weight: 500;
-  &:not(:first-child){
-    border-top: 1px solid $border;
-  }
-  &.title,
-  a,
-  .skeletonInner{
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) repeat(3, 110px);
-    align-items: center;
-    gap: 12px;
-    padding: 20px 12px;
-    div + div{
-      text-align: right;
-    }
-  }
-  .skeletonInner{
-    font-size: 14px;
-    @include sp{
-      grid-template-columns: auto auto minmax(0, 1fr) auto;
-      gap: 4px;
-      padding: 14px 4px;
-      div:nth-child(1){
-        grid-column: 1 / 4;
-      }
-      div:nth-child(4){
-        grid-column: 4;
-        grid-row: 1 / 3;
-        align-self: center;
-        padding-left: 12px;
-        font-size: 16px;
-      }
-      div + div span{
-        margin-left: 0;
-      }
-      div:nth-child(4) span{
-        margin-left: auto;
-      }
-    }
-    span{
-      display: block;
-      height: 1em;
-      border-radius: 4px;
-      background: $border;
-      animation: skeletonPulse 1.4s ease-in-out infinite;
-    }
-    div:first-child span{
-      width: 55%;
-    }
-    div + div span{
-      width: 70%;
-      margin-left: auto;
-    }
-  }
-  &.title{
-    padding: 10px 12px;
-    @include sp{
-      display: none;
-    }
-  }
-  a{
-    font-size: 14px;
-    @include sp{
-      grid-template-columns: auto auto minmax(0, 1fr) auto;
-      gap: 4px;
-      padding: 14px 4px;
-      div{
-        text-align: left;
-      }
-      div:nth-child(1){
-        grid-column: 1 / 4;
-        font-size: 14px;
-      }
-      div:nth-child(2)::before{
-        content: "売価";
-      }
-      div:nth-child(3)::before{
-        content: "・原価";
-      }
-      div:nth-child(4){
-        grid-column: 4;
-        grid-row: 1 / 3;
-        align-self: center;
-        padding-left: 12px;
-        color: $black;
-        font-size: 16px;
-        font-weight: bold;
-        text-align: right;
-      }
-    }
-    div:first-child{
-      color: $black;
-      font-weight: bold;
-    }
-    &:hover{
-      background: #FAFAFA;
-    }
-  }
-}
-
-.high{
-  color: $red;
-}
+$cols: minmax(0, 1.05fr) minmax(0, 1fr) 110px 110px 92px;
 
 .filter{
   min-width: 0;
-  margin: 24px 0 0;
+  margin: 20px 0 0;
   padding: 0;
   border: 0;
   legend{
-    padding: 0;
-    color: $text;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
-  @include sp{
-    margin-top: 16px;
-  }
-}
-
-.summary{
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-  margin-top: 20px;
-  padding: 14px 16px;
-  border: 1px solid $border;
-  border-radius: 8px;
-  background: #FAFAFA;
   @include sp{
     margin-top: 14px;
-    padding: 12px 14px;
-    gap: 2px 12px;
-  }
-}
-
-.summaryCount{
-  color: $text;
-  font-size: 13px;
-}
-
-.summaryRate{
-  color: $text;
-  font-size: 13px;
-  span{
-    margin-left: 6px;
-    color: $black;
-    font-size: 20px;
-    font-weight: bold;
-    @include sp{
-      font-size: 18px;
-    }
-  }
-}
-
-.summaryNote{
-  color: $text;
-  font-size: 12px;
-  @include sp{
-    flex-basis: 100%;
   }
 }
 
@@ -176,17 +25,17 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 10px;
+  margin-top: 26px;
   @include sp{
-    margin-top: 10px;
+    margin-top: 18px;
   }
 }
 
 .sortLabel{
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   color: $text;
   font-size: 13px;
   white-space: nowrap;
@@ -200,23 +49,181 @@
 }
 
 .sort{
-  padding: 7px 10px;
+  padding: 10px 34px 10px 14px;
   border: 1px solid $border;
   border-radius: 8px;
   background: $white;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.4 1.6 6 6.2l4.6-4.6' stroke='%236B7280' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 11px;
   color: $black;
   font-size: 13px;
   cursor: pointer;
-  &:hover{
+  transition: border-color .2s;
+  &:hover,
+  &:focus{
     border-color: $main;
-  }
-  &:focus-visible{
-    border-color: $main;
-    outline: 2px solid rgba($main, .4);
-    outline-offset: 1px;
   }
   @include sp{
     flex: 1;
     min-width: 0;
+  }
+}
+
+.head{
+  display: grid;
+  grid-template-columns: $cols;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: $bgSubtle;
+  color: $text;
+  font-size: 13px;
+  div + div{
+    text-align: right;
+  }
+  div:nth-child(2){
+    text-align: left;
+  }
+  @include narrow{
+    display: none;
+  }
+}
+
+.row{
+  border-top: 1px solid $border;
+  a{
+    display: grid;
+    grid-template-columns: $cols;
+    align-items: center;
+    gap: 12px;
+    padding: 17px 20px;
+    color: $text;
+    font-size: 14px;
+    transition: background .2s;
+    &:hover{
+      background: $bgSubtle;
+      opacity: 1;
+    }
+    div + div{
+      text-align: right;
+    }
+    div:nth-child(2){
+      text-align: left;
+    }
+    div:nth-child(1){
+      overflow: hidden;
+      color: $black;
+      font-weight: bold;
+      font-size: 15px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    div:nth-child(5){
+      color: $black;
+      font-weight: bold;
+    }
+    @include narrow{
+      grid-template-columns: auto auto minmax(0, 1fr) auto;
+      gap: 7px 4px;
+      padding: 15px 14px;
+      font-size: 13px;
+      div + div{
+        text-align: left;
+      }
+      div:nth-child(1){
+        grid-column: 1 / 4;
+        grid-row: 1;
+        font-size: 14px;
+      }
+      div:nth-child(2){
+        grid-column: 1 / 4;
+        grid-row: 2;
+      }
+      div:nth-child(3){
+        grid-column: 1;
+        grid-row: 3;
+        &::before{
+          content: "売価 ";
+        }
+      }
+      div:nth-child(4){
+        grid-column: 2;
+        grid-row: 3;
+        &::before{
+          content: "・原価 ";
+        }
+      }
+      div:nth-child(5){
+        grid-column: 4;
+        grid-row: 1 / 4;
+        align-self: center;
+        padding-left: 12px;
+        font-size: 17px;
+        text-align: right;
+      }
+    }
+  }
+}
+
+.cats{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  span{
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: $bgSubtle;
+    color: $text;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  @include sp{
+    span{
+      padding: 3px 8px;
+      font-size: 11px;
+    }
+  }
+}
+
+.high{
+  color: $red !important;
+}
+
+.skeletonRow{
+  border-top: 1px solid $border;
+  &:first-child{
+    border-top: 0;
+  }
+  .skeletonInner{
+    display: grid;
+    grid-template-columns: $cols;
+    align-items: center;
+    gap: 12px;
+    padding: 17px 20px;
+    @include narrow{
+      grid-template-columns: minmax(0, 1fr) 70px;
+      gap: 8px;
+      padding: 15px 14px;
+      div:nth-child(n+3){
+        display: none;
+      }
+    }
+  }
+  span{
+    display: block;
+    height: 1em;
+    border-radius: 4px;
+    background: $border;
+    animation: skeletonPulse 1.4s ease-in-out infinite;
+  }
+  div:first-child span{
+    width: 55%;
+  }
+  div + div span{
+    width: 70%;
+    margin-left: auto;
   }
 }

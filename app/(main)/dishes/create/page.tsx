@@ -132,7 +132,7 @@ const CreateDishes = () => {
             <h1 className="pageTitle">新しい商品を登録</h1>
           </div>
         </div>
-        <form className="form" onSubmit={handleSubmit}>
+        <form className={`form ${styles.form}`} onSubmit={handleSubmit}>
           <div className={styles.formRow}>
             <dl>
               <dt><label htmlFor="dish-name">商品名</label></dt>
@@ -151,50 +151,67 @@ const CreateDishes = () => {
             </dl>
           </div>
 
-          <div className={styles.rows}>
-            <div className={`${styles.rowsHead} pc`}>
-              <div>食材</div>
-              <div>使用量</div>
-              <div>単価</div>
+          <div>
+            <div className="sectionHead">
+              <p className="sectionLabel">使用する食材</p>
+              <p className="sectionNote">単価は食材の仕入れ値から自動で計算されます</p>
             </div>
-            <div className={`${styles.rowsLabel} sp`}>食材と使用量</div>
-            {rows.map((row, index) => {
-              const usedByOthers = rows.filter((_, i) => i !== index).map((other) => other.ingredientId)
-              const selected = ingredients.find((ingredient) => ingredient.id === Number(row.ingredientId))
-              const unitCost = selected ? selected.purchase_price / selected.purchase_quantity : null
-              return (
-                <div className={styles.row} key={index}>
-                  <Combobox
-                    options={ingredientOptions.filter((option) => !usedByOthers.includes(option.value))}
-                    value={row.ingredientId}
-                    onChange={(newValue) => changeIngredient(index, newValue)}
-                    placeholder="食材を検索"
-                    ariaLabel={`${index + 1}行目の食材`}
-                    emptyMessage="該当する食材がありません"
-                    required
-                  />
+            <div className={styles.rowsCard}>
+              <div className={styles.rowsHead}>
+                <div>食材</div>
+                <div>使用量</div>
+                <div>単価</div>
+                <div>小計</div>
+                <div></div>
+              </div>
+              {rows.map((row, index) => {
+                const usedByOthers = rows.filter((_, i) => i !== index).map((other) => other.ingredientId)
+                const selected = ingredients.find((ingredient) => ingredient.id === Number(row.ingredientId))
+                const unitCost = selected ? selected.purchase_price / selected.purchase_quantity : null
+                const subtotal = unitCost !== null && row.quantity !== "" ? unitCost * Number(row.quantity) : null
+                return (
+                  <div className={styles.row} key={index}>
+                    <div className={styles.comboWrap}>
+                      <Combobox
+                        options={ingredientOptions.filter((option) => !usedByOthers.includes(option.value))}
+                        value={row.ingredientId}
+                        onChange={(newValue) => changeIngredient(index, newValue)}
+                        placeholder="食材を検索"
+                        ariaLabel={`${index + 1}行目の食材`}
+                        emptyMessage="該当する食材がありません"
+                        required
+                      />
+                    </div>
 
-                  <div className="formField">
-                    <input
-                      value={row.quantity}
-                      onChange={(e) => changeQuantity(index, e.target.value)}
-                      placeholder="使用量"
-                      type="number"
-                      aria-label={`${index + 1}行目の使用量`}
-                    />
-                    <span>{selected?.unit}</span>
-                  </div>
+                    <div className={`formField ${styles.quantityWrap}`}>
+                      <input
+                        value={row.quantity}
+                        onChange={(e) => changeQuantity(index, e.target.value)}
+                        placeholder="使用量"
+                        type="number"
+                        aria-label={`${index + 1}行目の使用量`}
+                      />
+                      <span>{selected?.unit}</span>
+                    </div>
 
-                  <div className={styles.unitCost}>
-                    {selected && unitCost !== null && `￥${unitCost.toFixed(2)} / ${selected.unit}`}
+                    <div className={styles.unitCost}>
+                      {selected && unitCost !== null ? `￥${unitCost.toFixed(2)} / ${selected.unit}` : "—"}
+                    </div>
+
+                    <div className={styles.subtotal}>
+                      {subtotal !== null ? `￥${Math.round(subtotal).toLocaleString()}` : "—"}
+                    </div>
+
+                    {rows.length > 1 ? (
+                      <button className={styles.deleteBtn} type="button" onClick={() => deleteRow(index)} aria-label={`${index + 1}行目の食材を削除`}>×</button>
+                    ) : (
+                      <div />
+                    )}
                   </div>
-                  {rows.length > 1 && (
-                    <button className={styles.deleteBtn} type="button" onClick={() => deleteRow(index)} aria-label="この食材を削除">×</button>
-                  )}
-                </div>
-              )
-            })}
-            <button className={styles.addBtn} type="button" onClick={addRow}>+ 食材を追加</button>
+                )
+              })}
+            </div>
+            <button className={styles.addBtn} type="button" onClick={addRow}>＋ 食材を追加</button>
           </div>
 
           <CategorySelect value={categoryIds} onChange={setCategoryIds} />

@@ -2,7 +2,7 @@
 @use "../../../styles/setting" as *;
 
 .form{
-  max-width: 480px;
+  max-width: 680px;
   @include sp{
     padding-bottom: 120px;
   }
@@ -10,16 +10,16 @@
 
 .formRow{
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
-  @include sp{
+  @include narrow{
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
 .quantity{
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 110px;
+  grid-template-columns: minmax(0, 1fr) 120px;
   gap: 10px;
 }
 
@@ -27,13 +27,15 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   border: 1px solid $border;
   border-radius: 8px;
-  background: #FAFAFA;
+  background: $bgSubtle;
   color: $text;
+  font-size: 13px;
   span{
     color: $black;
+    font-size: 15px;
     font-weight: bold;
   }
 }

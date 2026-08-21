@@ -11,7 +11,11 @@ const SideBar = () => {
   const isIngredientsActive = !isIngredientCreateActive && pathname.startsWith("/ingredients")
   return (
     <aside className={styles.sideBar}>
-      <p className={styles.title}><Link href="/">■Genkalc</Link></p>
+      <p className={styles.title}>
+        <Link href="/">
+          <span className={styles.mark} aria-hidden="true"></span>Genkalc
+        </Link>
+      </p>
       <nav>
         <ul>
           <li><Link href="/dishes" className={isDishesActive ? styles.active : ""}>商品一覧</Link></li>
