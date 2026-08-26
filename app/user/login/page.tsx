@@ -64,6 +64,7 @@ const Login = () => {
           <button className="btn">ログイン</button>
         </form>
         <div className="authLink">アカウントをお持ちでない方は<Link href="/user/register">会員登録</Link></div>
+        <div className="authLink authLinkSub"><Link href="/user/forgot-password">パスワードをお忘れの方</Link></div>
       </div>
     </div>
   )

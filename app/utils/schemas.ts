@@ -24,6 +24,10 @@ export const userSchema = z.object({
   password: z.string().min(8, "パスワードは8文字以上にしてください")
 })
 
+export const forgotPasswordSchema = userSchema.pick({ email: true })
+
+export const resetPasswordSchema = userSchema.pick({ password: true })
+
 export const categorySchema = z.object({
   name: z.string().trim().min(1, "カテゴリー名を入力してください").max(20, "カテゴリー名は20文字以内にしてください")
 })
