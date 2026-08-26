@@ -14,12 +14,14 @@ const CreateIngredients = () => {
   const [purchasePrice, setPurchasePrice] = useState("")
   const [purchaseQuantity, setPurchaseQuantity] = useState("")
   const [unit, setUnit] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const router = useRouter()
   const loginUserEmail = useAuth()
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setIsSubmitting(true)
     try {
       const response = await fetch("/api/ingredients", {
         method: "POST",
@@ -41,9 +43,11 @@ const CreateIngredients = () => {
         router.push("/ingredients")
       } else {
         toast.error(jsonData.message)
+        setIsSubmitting(false)
       }
     } catch {
       toast.error("通信に失敗しました")
+      setIsSubmitting(false)
     }
   }
   if (!loginUserEmail) return null
@@ -97,7 +101,9 @@ const CreateIngredients = () => {
         </div>
 
         <div className="formBtns">
-          <button className="btn formSubmit">食材を登録</button>
+          <button className="btn formSubmit" disabled={isSubmitting} aria-busy={isSubmitting}>
+            {isSubmitting && <span className="btnSpinner" aria-hidden="true" />}食材を登録
+          </button>
           <Link href="/ingredients" className="formCancel pc">キャンセル</Link>
         </div>
       </form>

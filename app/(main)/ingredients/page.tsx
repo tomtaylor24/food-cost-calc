@@ -8,7 +8,7 @@ import type { Ingredient } from "@/app/types"
 
 
 const IngredientsList = () => {
-  const [ingredients, setIngredientsList] = useState<Ingredient[]>([])
+  const [ingredients, setIngredients] = useState<Ingredient[]>([])
   const loginUserEmail = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
@@ -23,9 +23,10 @@ const IngredientsList = () => {
         })
         const jsonData = await response.json()
         if (response.ok) {
-          setIngredientsList(jsonData.ingredients)
+          setIngredients(jsonData.ingredients)
         } else {
           toast.error(jsonData.message)
+          setLoadError(true)
         }
       } catch {
         setLoadError(true)

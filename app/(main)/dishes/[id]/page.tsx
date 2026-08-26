@@ -19,6 +19,7 @@ type Props = {
 const UpdateDish = (context: Props) => {
   const [name, setName] = useState("")
   const [sellingPrice, setSellingPrice] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
   const [categoryIds, setCategoryIds] = useState<string[]>([])
   const [rows, setRows] = useState<RecipeRow[]>([])
@@ -58,16 +59,20 @@ const UpdateDish = (context: Props) => {
 
   useEffect(() => {
     const getIngredients = async () => {
-      const response = await fetch("/api/ingredients", {
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+      try {
+        const response = await fetch("/api/ingredients", {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          }
+        })
+        const jsonData = await response.json()
+        if (response.ok) {
+          setIngredients(jsonData.ingredients)
+        } else {
+          toast.error(jsonData.message)
         }
-      })
-      const jsonData = await response.json()
-      if (response.ok) {
-        setIngredients(jsonData.ingredients)
-      } else {
-        toast.error(jsonData.message)
+      } catch {
+        toast.error("通信に失敗しました")
       }
     }
     getIngredients()
@@ -87,6 +92,7 @@ const UpdateDish = (context: Props) => {
 
       seenIds.push(row.ingredientId)
     }
+    setIsSubmitting(true)
     try {
       const params = await context.params
       const response = await fetch(`/api/dishes/${params.id}`, {
@@ -109,9 +115,11 @@ const UpdateDish = (context: Props) => {
         router.push("/dishes")
       } else {
         toast.error(jsonData.message)
+        setIsSubmitting(false)
       }
     } catch {
       toast.error("商品編集に失敗しました")
+      setIsSubmitting(false)
     }
   }
 
@@ -191,8 +199,10 @@ const UpdateDish = (context: Props) => {
             <h1 className="pageTitle">{name}</h1>
           </div>
           <div className="pageActions">
-            <button form="dishForm" className="btn formSubmit">変更を保存</button>
-            <button className="formDelete" type="button" onClick={handleDelete}>商品を削除</button>
+            <button form="dishForm" className="btn formSubmit" disabled={isSubmitting} aria-busy={isSubmitting}>
+              {isSubmitting && <span className="btnSpinner" aria-hidden="true" />}変更を保存
+            </button>
+            <button className="formDelete" type="button" onClick={handleDelete} disabled={isSubmitting}>商品を削除</button>
           </div>
         </div>
 

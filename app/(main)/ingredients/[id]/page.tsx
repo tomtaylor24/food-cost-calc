@@ -19,6 +19,7 @@ const UpdateIngredient = (context: Props) => {
   const [purchasePrice, setPurchasePrice] = useState("")
   const [purchaseQuantity, setPurchaseQuantity] = useState("")
   const [unit, setUnit] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const router = useRouter()
   const loginUserEmail = useAuth()
@@ -53,6 +54,7 @@ const UpdateIngredient = (context: Props) => {
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setIsSubmitting(true)
     try {
       const params = await context.params
       const response = await fetch(`/api/ingredients/${params.id}`, {
@@ -75,9 +77,11 @@ const UpdateIngredient = (context: Props) => {
         router.push("/ingredients")
       } else {
         toast.error(jsonData.message)
+        setIsSubmitting(false)
       }
     } catch {
       toast.error("食材編集に失敗しました")
+      setIsSubmitting(false)
     }
   }
 
@@ -118,8 +122,10 @@ const UpdateIngredient = (context: Props) => {
             <h1 className="pageTitle">{name}</h1>
           </div>
           <div className="pageActions">
-            <button form="ingredientForm" className="btn formSubmit">変更を保存</button>
-            <button className="formDelete" type="button" onClick={handleDelete}>食材を削除</button>
+            <button form="ingredientForm" className="btn formSubmit" disabled={isSubmitting} aria-busy={isSubmitting}>
+              {isSubmitting && <span className="btnSpinner" aria-hidden="true" />}変更を保存
+            </button>
+            <button className="formDelete" type="button" onClick={handleDelete} disabled={isSubmitting}>食材を削除</button>
           </div>
         </div>
 

@@ -8,12 +8,13 @@ import type { DishWithCost, Category } from "@/app/types"
 
 
 const DishesList = () => {
-  const [dishes, setDishesList] = useState<DishWithCost[]>([])
+  const [dishes, setDishes] = useState<DishWithCost[]>([])
   const loginUserEmail = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [filterId, setFilterId] = useState("all")
   const [categories, setCategories] = useState<Category[]>([])
+  const [categoryError, setCategoryError] = useState(false)
   const [sortKey, setSortKey] = useState("created_desc")
 
   useEffect(() => {
@@ -26,9 +27,10 @@ const DishesList = () => {
         })
         const jsonData = await response.json()
         if (response.ok) {
-          setDishesList(jsonData.dishes)
+          setDishes(jsonData.dishes)
         } else {
           toast.error(jsonData.message)
+          setLoadError(true)
         }
       } catch {
         setLoadError(true)
@@ -54,9 +56,11 @@ const DishesList = () => {
           setCategories(jsonData.categories)
         } else {
           toast.error(jsonData.message)
+          setCategoryError(true)
         }
       } catch {
         toast.error("通信に失敗しました")
+        setCategoryError(true)
       }
     }
     getCategories()
@@ -125,27 +129,34 @@ const DishesList = () => {
   const filterChips = (
     <fieldset className={styles.filter}>
       <legend>カテゴリー</legend>
-      <div className="chips">
-        <label className="chip">
-          <input type="radio" name="filter" value="all"
-            checked={filterId === "all"} onChange={(e) => setFilterId(e.target.value)} />
-          <span>すべて</span>
-        </label>
-        {categories.map((category) => (
-          <label className="chip" key={category.id}>
-            <input type="radio" name="filter" value={String(category.id)}
-              checked={filterId === String(category.id)} onChange={(e) => setFilterId(e.target.value)} />
-            <span>{category.name}</span>
-          </label>
-        ))}
-        {(hasUncategorized || filterId === "") && (
+      {categoryError ? (
+        <p className={styles.filterError} role="status">
+          カテゴリーを読み込めませんでした
+          <button type="button" className={styles.filterRetry} onClick={() => location.reload()}>再読み込み</button>
+        </p>
+      ) : (
+        <div className="chips">
           <label className="chip">
-            <input type="radio" name="filter" value=""
-              checked={filterId === ""} onChange={(e) => setFilterId(e.target.value)} />
-            <span>未分類</span>
+            <input type="radio" name="filter" value="all"
+              checked={filterId === "all"} onChange={(e) => setFilterId(e.target.value)} />
+            <span>すべて</span>
           </label>
-        )}
-      </div>
+          {categories.map((category) => (
+            <label className="chip" key={category.id}>
+              <input type="radio" name="filter" value={String(category.id)}
+                checked={filterId === String(category.id)} onChange={(e) => setFilterId(e.target.value)} />
+              <span>{category.name}</span>
+            </label>
+          ))}
+          {(hasUncategorized || filterId === "") && (
+            <label className="chip">
+              <input type="radio" name="filter" value=""
+                checked={filterId === ""} onChange={(e) => setFilterId(e.target.value)} />
+              <span>未分類</span>
+            </label>
+          )}
+        </div>
+      )}
     </fieldset>
   )
 

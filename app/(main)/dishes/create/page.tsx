@@ -20,22 +20,27 @@ const CreateDishes = () => {
   const [rows, setRows] = useState([
     { ingredientId: "", quantity: "" }
   ])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const router = useRouter()
   const loginUserEmail = useAuth()
 
   useEffect(() => {
     const getIngredients = async () => {
-      const response = await fetch("/api/ingredients", {
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+      try{
+        const response = await fetch("/api/ingredients", {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          }
+        })
+        const jsonData = await response.json()
+        if (response.ok) {
+          setIngredients(jsonData.ingredients)
+        } else {
+          toast.error(jsonData.message)
         }
-      })
-      const jsonData = await response.json()
-      if (response.ok) {
-        setIngredients(jsonData.ingredients)
-      } else {
-        toast.error(jsonData.message)
+      }catch{
+        toast.error("通信に失敗しました")
       }
     }
     getIngredients()
@@ -56,6 +61,7 @@ const CreateDishes = () => {
       seenIds.push(row.ingredientId)
     }
 
+    setIsSubmitting(true)
     try {
       const response = await fetch("/api/dishes", {
         method: "POST",
@@ -77,9 +83,11 @@ const CreateDishes = () => {
         router.push("/dishes")
       } else {
         toast.error(jsonData.message)
+        setIsSubmitting(false)
       }
     } catch {
       toast.error("商品登録に失敗しました")
+      setIsSubmitting(false)
     }
   }
 
@@ -220,7 +228,9 @@ const CreateDishes = () => {
           <p className={styles.preview}>この商品の原価：<span>￥{Math.round(previewCost).toLocaleString()}</span></p>
 
           <div className={`formBtns ${styles.formBtns}`}>
-            <button className="btn formSubmit">商品を登録</button>
+            <button className="btn formSubmit" disabled={isSubmitting} aria-busy={isSubmitting}>
+              {isSubmitting && <span className="btnSpinner" aria-hidden="true" />}商品を登録
+            </button>
             <Link href="/dishes" className="formCancel pc">キャンセル</Link>
           </div>
         </form>

@@ -90,14 +90,15 @@ $mockBorder: #E8ECF3;
 
 .navRegister{
   padding: 9px 18px;
-  border: 1px solid $border;
+  border: 1px solid $main;
   border-radius: 8px;
+  color: $main;
   font-size: 13px;
   font-weight: bold;
-  transition: border-color .2s, color .2s;
+  transition: background .2s, color .2s;
   &:hover{
-    border-color: $main;
-    color: $main;
+    background: $main;
+    color: $white;
     opacity: 1;
   }
   @include sp{
@@ -191,16 +192,17 @@ $mockBorder: #E8ECF3;
 
 .heroSecondary{
   padding: 15px 34px;
-  border: 1px solid $border;
+  border: 1px solid $main;
   border-radius: 8px;
   background: $white;
+  color: $main;
   font-size: 14px;
   font-weight: bold;
   text-align: center;
-  transition: border-color .2s, color .2s;
+  transition: background .2s, color .2s;
   &:hover{
-    border-color: $main;
-    color: $main;
+    background: $main;
+    color: $white;
     opacity: 1;
   }
 }
@@ -722,14 +724,15 @@ $mockBorder: #E8ECF3;
   display: inline-block;
   margin-top: 28px;
   padding: 13px 26px;
-  border: 1px solid $border;
+  border: 1px solid $main;
   border-radius: 8px;
+  color: $main;
   font-size: 13px;
   font-weight: bold;
-  transition: border-color .2s, color .2s;
+  transition: background .2s, color .2s;
   &:hover{
-    border-color: $main;
-    color: $main;
+    background: $main;
+    color: $white;
     opacity: 1;
   }
 }

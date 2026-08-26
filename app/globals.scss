@@ -346,6 +346,7 @@ dd {
 }
 
 .btn{
+  position: relative;
   display: block;
   max-width: 100%;
   text-align: center;
@@ -358,6 +359,38 @@ dd {
   transition: opacity .2s;
   &:hover{
     opacity: .88;
+  }
+  &:disabled{
+    opacity: .65;
+    cursor: default;
+    &:hover{
+      opacity: .65;
+    }
+  }
+}
+
+.btnSpinner{
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  width: 13px;
+  height: 13px;
+  margin-top: -7px;
+  border: 2px solid rgba(255, 255, 255, .35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btnSpin .6s linear infinite;
+}
+
+@keyframes btnSpin{
+  to{
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .btnSpinner{
+    animation-duration: 1.6s;
   }
 }
 
@@ -620,9 +653,38 @@ dd {
     align-items: center;
     height: 100%;
   }
+  .authLogo{
+    display: flex;
+    justify-content: center;
+    margin-bottom: 26px;
+    a{
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      color: $black;
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: .01em;
+      &:hover{
+        opacity: .7;
+      }
+    }
+    span{
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      background: $black;
+      color: $white;
+      font-size: 14px;
+      line-height: 1;
+    }
+  }
   .authTitle{
     text-align: center;
-    font-size: 19px;
+    font-size: 16px;
     font-weight: bold;
   }
   .authText{

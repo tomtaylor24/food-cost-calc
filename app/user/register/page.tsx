@@ -6,7 +6,6 @@ import toast from "react-hot-toast"
 import { SubmitEvent } from "react"
 import useGuestOnly from "@/app/utils/useGuestOnly"
 
-
 const Register = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -44,6 +43,9 @@ const Register = () => {
   return (
     <div className="auth">
       <div className="inner">
+        <p className="authLogo">
+          <Link href="/"><span aria-hidden="true">G</span>Genkalc</Link>
+        </p>
         <h1 className="authTitle">会員登録</h1>
         <p className="authText">無料でアカウントを作成できます</p>
         <form className="authForm" onSubmit={handleSubmit}>

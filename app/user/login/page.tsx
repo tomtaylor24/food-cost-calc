@@ -35,8 +35,7 @@ const Login = () => {
       } else {
         toast.error(jsonData.message)
       }
-    }
-    catch {
+    } catch {
       toast.error("通信に失敗しました")
     }
   }
@@ -44,7 +43,10 @@ const Login = () => {
   return (
     <div className="auth">
       <div className="inner">
-        <h1 className="authTitle">Genkalcにログイン</h1>
+        <p className="authLogo">
+          <Link href="/"><span aria-hidden="true">G</span>Genkalc</Link>
+        </p>
+        <h1 className="authTitle">ログイン</h1>
         <p className="authText">メールアドレスとパスワードを入力してください</p>
         <form className="authForm" onSubmit={handleSubmit}>
           <dl>

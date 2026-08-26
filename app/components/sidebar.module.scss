@@ -5,12 +5,15 @@
   position: sticky;
   top: 0;
   align-self: start;
+  display: flex;
+  flex-direction: column;
   height: 100svh;
   overflow-y: auto;
   padding: 26px 14px;
   border-right: 1px solid $border;
   @include sp{
-    position: static;
+    position: relative;
+    display: block;
     height: auto;
     overflow-y: visible;
     padding: 16px 16px 0;
@@ -82,15 +85,64 @@
   }
 }
 
+.logoutArea{
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid $border;
+  @include sp{
+    position: absolute;
+    top: 13px;
+    right: 16px;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+}
+
+.logout{
+  display: block;
+  width: 100%;
+  padding: 11px 12px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: $text;
+  font-family: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+  &:hover{
+    background: $bgSubtle;
+    color: $black;
+  }
+  @include sp{
+    width: auto;
+    padding: 5px 10px;
+    border: 1px solid $border;
+    border-radius: 6px;
+    font-size: 12px;
+    &:hover{
+      background: none;
+    }
+  }
+}
+
 .mark{
   flex-shrink: 0;
+  display: grid;
+  place-items: center;
   width: 21px;
   height: 21px;
   border-radius: 6px;
   background: $black;
+  color: $white;
+  font-size: 12px;
+  line-height: 1;
   @include sp{
     width: 18px;
     height: 18px;
     border-radius: 5px;
+    font-size: 11px;
   }
 }
