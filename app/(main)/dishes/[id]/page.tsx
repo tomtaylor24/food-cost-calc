@@ -43,6 +43,7 @@ const UpdateDish = (context: Props) => {
           setSellingPrice(String(singleItem.selling_price ?? ""))
           setCategoryIds(singleItem.dish_categories.map((row) => String(row.category_id)))
           setRows(singleItem.dish_ingredients.map((item) => ({
+            id: crypto.randomUUID(),
             ingredientId: String(item.ingredient_id),
             quantity: String(item.quantity),
           })))
@@ -106,7 +107,7 @@ const UpdateDish = (context: Props) => {
           name: name,
           sellingPrice: sellingPrice === "" ? null : sellingPrice,
           categoryIds: categoryIds,
-          rows: rows
+          rows: rows.map((row) => ({ ingredientId: row.ingredientId, quantity: row.quantity }))
         })
       })
       const jsonData = await response.json()
@@ -158,7 +159,7 @@ const UpdateDish = (context: Props) => {
   }
 
   const addRow = () => {
-    setRows([...rows, { ingredientId: "", quantity: "" }])
+    setRows([...rows, { id: crypto.randomUUID(), ingredientId: "", quantity: "" }])
   }
 
   const deleteRow = (index: number) => {
@@ -261,7 +262,7 @@ const UpdateDish = (context: Props) => {
                 const unitCost = selected ? selected.purchase_price / selected.purchase_quantity : null
                 const subtotal = unitCost !== null && row.quantity !== "" ? unitCost * Number(row.quantity) : null
                 return (
-                  <div className={styles.row} key={index}>
+                  <div className={styles.row} key={row.id}>
                     <div className={styles.comboWrap}>
                       <Combobox
                         options={ingredientOptions.filter((option) => !usedByOthers.includes(option.value))}

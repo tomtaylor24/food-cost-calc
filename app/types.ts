@@ -24,7 +24,14 @@ export type Ingredient = {
   created_at: string
 }
 
+export type IngredientDetail = Ingredient & {
+  dish_ingredients: {
+    count: number
+  }[]
+}
+
 export type RecipeRow = {
+  id: string
   ingredientId: string
   quantity: string
 }

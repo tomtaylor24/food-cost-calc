@@ -7,7 +7,7 @@ import calcDishCost from "@/app/utils/calcCost"
 import styles from "./page.module.scss"
 import toast from "react-hot-toast"
 import { SubmitEvent } from "react"
-import type { Ingredient } from "@/app/types"
+import type { Ingredient, RecipeRow } from "@/app/types"
 import CategorySelect from "@/app/components/categorySelect"
 import Combobox from "@/app/components/combobox"
 
@@ -17,8 +17,8 @@ const CreateDishes = () => {
   const [sellingPrice, setSellingPrice] = useState("")
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
   const [categoryIds, setCategoryIds] = useState<string[]>([])
-  const [rows, setRows] = useState([
-    { ingredientId: "", quantity: "" }
+  const [rows, setRows] = useState<RecipeRow[]>([
+    { id: "row-1", ingredientId: "", quantity: "" }
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -74,7 +74,7 @@ const CreateDishes = () => {
           name: name,
           sellingPrice: sellingPrice === "" ? null : sellingPrice,
           categoryIds: categoryIds,
-          rows: rows
+          rows: rows.map((row) => ({ ingredientId: row.ingredientId, quantity: row.quantity }))
         })
       })
       const jsonData = await response.json()
@@ -104,7 +104,7 @@ const CreateDishes = () => {
   }
 
   const addRow = () => {
-    setRows([...rows, { ingredientId: "", quantity: "" }])
+    setRows([...rows, { id: crypto.randomUUID(), ingredientId: "", quantity: "" }])
   }
 
   const deleteRow = (index: number) => {
@@ -178,7 +178,7 @@ const CreateDishes = () => {
                 const unitCost = selected ? selected.purchase_price / selected.purchase_quantity : null
                 const subtotal = unitCost !== null && row.quantity !== "" ? unitCost * Number(row.quantity) : null
                 return (
-                  <div className={styles.row} key={index}>
+                  <div className={styles.row} key={row.id}>
                     <div className={styles.comboWrap}>
                       <Combobox
                         options={ingredientOptions.filter((option) => !usedByOthers.includes(option.value))}

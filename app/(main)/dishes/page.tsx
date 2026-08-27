@@ -160,16 +160,20 @@ const DishesList = () => {
     </fieldset>
   )
 
+  const heading = (
+    <div className="pageHeading">
+      <h1 className="pageTitle">商品一覧</h1>
+      <p className="pageDescription">登録済みの商品と原価率を確認できます</p>
+    </div>
+  )
+
   if (!loginUserEmail) return null
 
   if (isLoading) {
     return (
       <div className="container">
         <div className="pageMain">
-          <div className="pageHeading">
-            <h1 className="pageTitle">商品一覧</h1>
-            <p className="pageDescription">登録済みの商品と原価率を確認できます</p>
-          </div>
+          {heading}
           <div className="pageBtns">
             <Link href="/dishes/create" className="btn">+ 新しい商品を登録</Link>
           </div>
@@ -197,10 +201,7 @@ const DishesList = () => {
     return (
       <div className="container">
         <div className="pageMain">
-          <div className="pageHeading">
-            <h1 className="pageTitle">商品一覧</h1>
-            <p className="pageDescription">登録済みの商品と原価率を確認できます</p>
-          </div>
+          {heading}
         </div>
         <div className="errorState">
           <p className="errorStateIcon" aria-hidden="true">!</p>
@@ -216,10 +217,7 @@ const DishesList = () => {
     return (
       <div className="container">
         <div className="pageMain">
-          <div className="pageHeading">
-            <h1 className="pageTitle">商品一覧</h1>
-            <p className="pageDescription">登録済みの商品と原価率を確認できます</p>
-          </div>
+          {heading}
         </div>
         <div className="emptyState">
           <p className="emptyStateTitle">まだ商品が登録されていません</p>
@@ -237,10 +235,7 @@ const DishesList = () => {
     return (
       <div className="container">
         <div className="pageMain">
-          <div className="pageHeading">
-            <h1 className="pageTitle">商品一覧</h1>
-            <p className="pageDescription">登録済みの商品と原価率を確認できます</p>
-          </div>
+          {heading}
         </div>
         {filterChips}
         <div className="emptyState">
@@ -254,10 +249,7 @@ const DishesList = () => {
   return (
     <div className="container">
       <div className="pageMain">
-        <div className="pageHeading">
-          <h1 className="pageTitle">商品一覧</h1>
-          <p className="pageDescription">登録済みの商品と原価率を確認できます</p>
-        </div>
+        {heading}
         <div className="pageBtns">
           <Link href="/dishes/create" className="btn">+ 新しい商品を登録</Link>
         </div>

@@ -38,16 +38,20 @@ const IngredientsList = () => {
     getIngredients()
   }, [])
 
+  const heading = (
+    <div className="pageHeading">
+      <h1 className="pageTitle">食材一覧</h1>
+      <p className="pageDescription">登録済みの食材と仕入れ情報を確認できます</p>
+    </div>
+  )
+
   if (!loginUserEmail) return null
 
   if (isLoading) {
     return (
       <div className="container">
         <div className="pageMain">
-          <div className="pageHeading">
-            <h1 className="pageTitle">食材一覧</h1>
-            <p className="pageDescription">登録済みの食材と仕入れ情報を確認できます</p>
-          </div>
+          {heading}
           <div className="pageBtns">
             <Link href="/ingredients/create" className="btn">+ 新しい食材を登録</Link>
           </div>
@@ -74,10 +78,7 @@ const IngredientsList = () => {
     return (
       <div className="container">
         <div className="pageMain">
-          <div className="pageHeading">
-            <h1 className="pageTitle">食材一覧</h1>
-            <p className="pageDescription">登録済みの食材と仕入れ情報を確認できます</p>
-          </div>
+          {heading}
         </div>
         <div className="errorState">
           <p className="errorStateIcon" aria-hidden="true">!</p>
@@ -93,10 +94,7 @@ const IngredientsList = () => {
     return (
       <div className="container">
         <div className="pageMain">
-          <div className="pageHeading">
-            <h1 className="pageTitle">食材一覧</h1>
-            <p className="pageDescription">登録済みの食材と仕入れ情報を確認できます</p>
-          </div>
+          {heading}
         </div>
         <div className="emptyState">
           <p className="emptyStateTitle">まだ食材が登録されていません</p>
@@ -109,10 +107,7 @@ const IngredientsList = () => {
   return (
     <div className="container">
       <div className="pageMain">
-        <div className="pageHeading">
-          <h1 className="pageTitle">食材一覧</h1>
-          <p className="pageDescription">登録済みの食材と仕入れ情報を確認できます</p>
-        </div>
+        {heading}
         <div className="pageBtns">
           <Link href="/ingredients/create" className="btn">+ 新しい食材を登録</Link>
         </div>

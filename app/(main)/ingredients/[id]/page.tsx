@@ -7,7 +7,7 @@ import styles from "./page.module.scss"
 import toast from "react-hot-toast"
 import Combobox from "@/app/components/combobox"
 import { UNIT_OPTIONS } from "@/app/utils/units"
-import { Ingredient } from "@/app/types"
+import { IngredientDetail } from "@/app/types"
 import { SubmitEvent } from "react"
 
 type Props = {
@@ -20,6 +20,7 @@ const UpdateIngredient = (context: Props) => {
   const [purchaseQuantity, setPurchaseQuantity] = useState("")
   const [unit, setUnit] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [usedCount, setUsedCount] = useState(0)
 
   const router = useRouter()
   const loginUserEmail = useAuth()
@@ -35,12 +36,13 @@ const UpdateIngredient = (context: Props) => {
           }
         })
         const jsonData = await response.json()
-        const singleItem = jsonData.ingredient as Ingredient
+        const singleItem = jsonData.ingredient as IngredientDetail
         if (response.ok) {
           setName(singleItem.name)
           setPurchasePrice(String(singleItem.purchase_price))
           setPurchaseQuantity(String(singleItem.purchase_quantity))
           setUnit(singleItem.unit)
+          setUsedCount(singleItem.dish_ingredients[0]?.count ?? 0)
         } else {
           toast.error(jsonData.message)
           router.push("/ingredients")
@@ -125,9 +127,14 @@ const UpdateIngredient = (context: Props) => {
             <button form="ingredientForm" className="btn formSubmit" disabled={isSubmitting} aria-busy={isSubmitting}>
               {isSubmitting && <span className="btnSpinner" aria-hidden="true" />}変更を保存
             </button>
-            <button className="formDelete" type="button" onClick={handleDelete} disabled={isSubmitting}>食材を削除</button>
+            <button className="formDelete" type="button" onClick={handleDelete} disabled={isSubmitting || usedCount > 0}>食材を削除</button>
           </div>
         </div>
+        {usedCount > 0 && (
+          <p className="pageNote" role="status">
+            この食材は<strong>{usedCount}件の商品</strong>で使われているため削除できません。先に商品側から取り除いてください。
+          </p>
+        )}
 
         <form id="ingredientForm" className={`form ${styles.form}`} onSubmit={handleSubmit}>
           <dl>

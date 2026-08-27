@@ -234,8 +234,9 @@ const Landing = () => {
           </p>
           <nav className={styles.nav} aria-label="サイト内リンク">
             <ul className={styles.navList}>
-              <li><a href="#featuresTitle" className={styles.navLink}>できること</a></li>
-              <li><a href="#techTitle" className={styles.navLink}>技術スタック</a></li>
+              <li className="pc"><a href="#flowTitle" className={styles.navLink}>使い方の流れ</a></li>
+              <li className="pc"><a href="#featuresTitle" className={styles.navLink}>できること</a></li>
+              <li className="pc"><a href="#techTitle" className={styles.navLink}>技術スタック</a></li>
               <li><Link href="/user/login" className={styles.navLink}>ログイン</Link></li>
             </ul>
             <Link href="/user/register" className={styles.navRegister}>会員登録</Link>

@@ -18,7 +18,7 @@ export async function GET(request: Request, context: Context) {
       const params = await context.params
       const { data, error } = await supabase
         .from("ingredients")
-        .select()
+        .select("*, dish_ingredients(count)")
         .eq("id", params.id)
         .eq("user_id", payload.userId)
         .single()
