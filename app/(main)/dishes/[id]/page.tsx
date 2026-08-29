@@ -2,30 +2,51 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import useAuth from "@/app/utils/useAuth"
-import calcDishCost from "@/app/utils/calcCost"
-import styles from "./page.module.scss"
+import { useForm, useWatch, useFieldArray, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import toast from "react-hot-toast"
+import useAuth from "@/app/utils/useAuth"
+import calcDishCost, { calcUnitPrice } from "@/app/utils/calcCost"
+import styles from "./page.module.scss"
 import type { DishDetail, Ingredient } from "@/app/types"
-import type { RecipeRow } from "@/app/types"
 import CategorySelect from "@/app/components/categorySelect"
 import Combobox from "@/app/components/combobox"
-import { SubmitEvent } from "react"
+import { dishFormSchema } from "@/app/utils/schemas"
 
 type Props = {
   params: Promise<{ id: string }>
 }
 
+type DishForm = z.infer<typeof dishFormSchema>
+
 const UpdateDish = (context: Props) => {
-  const [name, setName] = useState("")
-  const [sellingPrice, setSellingPrice] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
-  const [categoryIds, setCategoryIds] = useState<string[]>([])
-  const [rows, setRows] = useState<RecipeRow[]>([])
 
   const router = useRouter()
   const loginUserEmail = useAuth()
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors, isSubmitting }
+  } = useForm<DishForm>({
+    resolver: zodResolver(dishFormSchema),
+    defaultValues: {
+      name: "",
+      sellingPrice: "",
+      categoryIds: [],
+      note: "",
+      rows: []
+    }
+  })
+
+  const { fields, append, remove } = useFieldArray({ control, name: "rows" })
+  const rows = useWatch({ control, name: "rows" })
+  const name = useWatch({ control, name: "name" })
+  const sellingPrice = useWatch({ control, name: "sellingPrice" })
 
   useEffect(() => {
     const getDish = async () => {
@@ -39,14 +60,16 @@ const UpdateDish = (context: Props) => {
         const jsonData = await response.json()
         const singleItem = jsonData.dish as DishDetail
         if (response.ok) {
-          setName(singleItem.name)
-          setSellingPrice(String(singleItem.selling_price ?? ""))
-          setCategoryIds(singleItem.dish_categories.map((row) => String(row.category_id)))
-          setRows(singleItem.dish_ingredients.map((item) => ({
-            id: crypto.randomUUID(),
-            ingredientId: String(item.ingredient_id),
-            quantity: String(item.quantity),
-          })))
+          reset({
+            name: singleItem.name,
+            sellingPrice: String(singleItem.selling_price ?? ""),
+            categoryIds: singleItem.dish_categories.map((row) => String(row.category_id)),
+            note: singleItem.note ?? "",
+            rows: singleItem.dish_ingredients.map((item) => ({
+              ingredientId: String(item.ingredient_id),
+              quantity: String(item.quantity)
+            }))
+          })
         } else {
           toast.error(jsonData.message)
           router.push("/dishes")
@@ -56,7 +79,7 @@ const UpdateDish = (context: Props) => {
       }
     }
     getDish()
-  }, [context, router])
+  }, [context, router, reset])
 
   useEffect(() => {
     const getIngredients = async () => {
@@ -79,21 +102,7 @@ const UpdateDish = (context: Props) => {
     getIngredients()
   }, [])
 
-  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const seenIds: string[] = []
-
-    for (const row of rows) {
-      if (row.ingredientId === "") continue
-
-      if (seenIds.includes(row.ingredientId)) {
-        toast.error("同じ食材が複数の行で選ばれています")
-        return
-      }
-
-      seenIds.push(row.ingredientId)
-    }
-    setIsSubmitting(true)
+  const onSubmit = async (data: DishForm) => {
     try {
       const params = await context.params
       const response = await fetch(`/api/dishes/${params.id}`, {
@@ -104,10 +113,11 @@ const UpdateDish = (context: Props) => {
           "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
         body: JSON.stringify({
-          name: name,
-          sellingPrice: sellingPrice === "" ? null : sellingPrice,
-          categoryIds: categoryIds,
-          rows: rows.map((row) => ({ ingredientId: row.ingredientId, quantity: row.quantity }))
+          name: data.name,
+          sellingPrice: data.sellingPrice === "" ? null : data.sellingPrice,
+          categoryIds: data.categoryIds,
+          note: data.note.trim() === "" ? null : data.note,
+          rows: data.rows.map((row) => ({ ingredientId: row.ingredientId, quantity: row.quantity }))
         })
       })
       const jsonData = await response.json()
@@ -116,11 +126,9 @@ const UpdateDish = (context: Props) => {
         router.push("/dishes")
       } else {
         toast.error(jsonData.message)
-        setIsSubmitting(false)
       }
     } catch {
       toast.error("商品編集に失敗しました")
-      setIsSubmitting(false)
     }
   }
 
@@ -146,30 +154,10 @@ const UpdateDish = (context: Props) => {
     }
   }
 
-  const changeIngredient = (index: number, value: string) => {
-    const newRows = [...rows]
-    newRows[index] = { ...newRows[index], ingredientId: value }
-    setRows(newRows)
-  }
-
-  const changeQuantity = (index: number, value: string) => {
-    const newRows = [...rows]
-    newRows[index] = { ...newRows[index], quantity: value }
-    setRows(newRows)
-  }
-
-  const addRow = () => {
-    setRows([...rows, { id: crypto.randomUUID(), ingredientId: "", quantity: "" }])
-  }
-
-  const deleteRow = (index: number) => {
-    const newRows = rows.filter((_, i) => i !== index)
-    setRows(newRows)
-  }
-
   const ingredientOptions = ingredients.map((ingredient) => ({
     value: String(ingredient.id),
-    label: ingredient.name
+    label: ingredient.name,
+    keywords: ingredient.name_kana ?? ""
   }))
 
   const previewItems = rows
@@ -224,12 +212,13 @@ const UpdateDish = (context: Props) => {
           </div>
         </div>
 
-        <form id="dishForm" className={`form ${styles.form}`} onSubmit={handleSubmit}>
+        <form id="dishForm" className={`form ${styles.form}`} onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className={styles.formRow}>
             <dl>
               <dt><label htmlFor="dish-name">商品名</label></dt>
               <dd>
-                <input id="dish-name" className="formInput" value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="例：唐揚げ定食" required />
+                <input id="dish-name" className="formInput" {...register("name")} type="text" placeholder="例：唐揚げ定食" aria-invalid={errors.name !== undefined} />
+                {errors.name && <p className="formError">{errors.name.message}</p>}
               </dd>
             </dl>
             <dl>
@@ -237,8 +226,9 @@ const UpdateDish = (context: Props) => {
               <dd>
                 <div className="formField">
                   <span>￥</span>
-                  <input id="selling-price" value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} type="number" placeholder="980" />
+                  <input id="selling-price" {...register("sellingPrice")} type="number" placeholder="980" aria-invalid={errors.sellingPrice !== undefined} />
                 </div>
+                {errors.sellingPrice && <p className="formError">{errors.sellingPrice.message}</p>}
               </dd>
             </dl>
           </div>
@@ -256,32 +246,39 @@ const UpdateDish = (context: Props) => {
                 <div>小計</div>
                 <div></div>
               </div>
-              {rows.map((row, index) => {
+              {fields.map((field, index) => {
+                const currentRow = rows[index]
                 const usedByOthers = rows.filter((_, i) => i !== index).map((other) => other.ingredientId)
-                const selected = ingredients.find((ingredient) => ingredient.id === Number(row.ingredientId))
-                const unitCost = selected ? selected.purchase_price / selected.purchase_quantity : null
-                const subtotal = unitCost !== null && row.quantity !== "" ? unitCost * Number(row.quantity) : null
+                const selected = ingredients.find((ingredient) => ingredient.id === Number(currentRow?.ingredientId))
+                const unitCost = selected ? calcUnitPrice(selected) : null
+                const subtotal = unitCost !== null && currentRow?.quantity !== "" ? unitCost * Number(currentRow?.quantity) : null
                 return (
-                  <div className={styles.row} key={row.id}>
+                  <div className={styles.row} key={field.id}>
                     <div className={styles.comboWrap}>
-                      <Combobox
-                        options={ingredientOptions.filter((option) => !usedByOthers.includes(option.value))}
-                        value={row.ingredientId}
-                        onChange={(newValue) => changeIngredient(index, newValue)}
-                        placeholder="食材を検索"
-                        ariaLabel={`${index + 1}行目の食材`}
-                        emptyMessage="該当する食材がありません"
-                        required
+                      <Controller
+                        name={`rows.${index}.ingredientId`}
+                        control={control}
+                        render={({ field: comboField }) => (
+                          <Combobox
+                            options={ingredientOptions.filter((option) => !usedByOthers.includes(option.value))}
+                            value={comboField.value}
+                            onChange={comboField.onChange}
+                            placeholder="食材を検索"
+                            ariaLabel={`${index + 1}行目の食材`}
+                            emptyMessage="該当する食材がありません"
+                          />
+                        )}
                       />
+                      {errors.rows?.[index]?.ingredientId && <p className="formError">{errors.rows[index].ingredientId.message}</p>}
                     </div>
 
                     <div className={`formField ${styles.quantityWrap}`}>
                       <input
-                        value={row.quantity}
-                        onChange={(e) => changeQuantity(index, e.target.value)}
+                        {...register(`rows.${index}.quantity`)}
                         placeholder="使用量"
                         type="number"
                         aria-label={`${index + 1}行目の使用量`}
+                        aria-invalid={errors.rows?.[index]?.quantity !== undefined}
                       />
                       <span>{selected?.unit}</span>
                     </div>
@@ -294,8 +291,8 @@ const UpdateDish = (context: Props) => {
                       {subtotal !== null ? `￥${Math.round(subtotal).toLocaleString()}` : "—"}
                     </div>
 
-                    {rows.length > 1 ? (
-                      <button className={styles.deleteRow} type="button" onClick={() => deleteRow(index)} aria-label={`${index + 1}行目の食材を削除`}>×</button>
+                    {fields.length > 1 ? (
+                      <button className={styles.deleteRow} type="button" onClick={() => remove(index)} aria-label={`${index + 1}行目の食材を削除`}>×</button>
                     ) : (
                       <div />
                     )}
@@ -303,10 +300,29 @@ const UpdateDish = (context: Props) => {
                 )
               })}
             </div>
-            <button className={styles.addBtn} type="button" onClick={addRow}>＋ 食材を追加</button>
+            {fields.map((field, index) => (
+              errors.rows?.[index]?.quantity
+                ? <p className="formError" key={field.id}>{index + 1}行目：{errors.rows[index].quantity.message}</p>
+                : null
+            ))}
+            <button className={styles.addBtn} type="button" onClick={() => append({ ingredientId: "", quantity: "" })}>＋ 食材を追加</button>
           </div>
 
-          <CategorySelect value={categoryIds} onChange={setCategoryIds} />
+          <Controller
+            name="categoryIds"
+            control={control}
+            render={({ field }) => (
+              <CategorySelect value={field.value} onChange={field.onChange} />
+            )}
+          />
+
+          <dl>
+            <dt><label htmlFor="dish-note">備考</label></dt>
+            <dd>
+              <textarea id="dish-note" className="formTextarea" {...register("note")} placeholder="例：ランチのみ提供／ソースは前日に仕込む" maxLength={500} aria-invalid={errors.note !== undefined} />
+              {errors.note && <p className="formError">{errors.note.message}</p>}
+            </dd>
+          </dl>
         </form>
       </div>
     )

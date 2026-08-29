@@ -1,25 +1,32 @@
 "use client"
-import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
-import { SubmitEvent } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import useGuestOnly from "@/app/utils/useGuestOnly"
+import { resetPasswordSchema } from "@/app/utils/schemas"
 
 type Props = {
   params: Promise<{ token: string }>
 }
 
-const ResetPassword = (context: Props) => {
-  const [password, setPassword] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+type ResetPasswordForm = z.infer<typeof resetPasswordSchema>
 
+const ResetPassword = (context: Props) => {
   const router = useRouter()
   useGuestOnly()
 
-  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm<ResetPasswordForm>({
+    resolver: zodResolver(resetPasswordSchema)
+  })
+
+  const onSubmit = async (data: ResetPasswordForm) => {
     try {
       const params = await context.params
       const response = await fetch(`/api/user/reset-password/${params.token}`, {
@@ -28,9 +35,7 @@ const ResetPassword = (context: Props) => {
           "Accept": "application/json",
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          password: password
-        })
+        body: JSON.stringify(data)
       })
       const jsonData = await response.json()
       if (response.ok) {
@@ -38,12 +43,10 @@ const ResetPassword = (context: Props) => {
         router.push("/user/login")
       } else {
         toast.error(jsonData.message)
-        setIsSubmitting(false)
       }
     }
     catch {
       toast.error("通信に失敗しました")
-      setIsSubmitting(false)
     }
   }
 
@@ -55,11 +58,12 @@ const ResetPassword = (context: Props) => {
         </p>
         <h1 className="authTitle">新しいパスワードを設定</h1>
         <p className="authText">8文字以上のパスワードを入力してください</p>
-        <form className="authForm" onSubmit={handleSubmit}>
+        <form className="authForm" onSubmit={handleSubmit(onSubmit)} noValidate>
           <dl>
             <dt><label htmlFor="reset-password">新しいパスワード</label></dt>
             <dd>
-              <input id="reset-password" value={password} onChange={(e) => setPassword(e.target.value)} type="password" name="password" placeholder="********" autoComplete="new-password" minLength={8} required />
+              <input id="reset-password" {...register("password")} type="password" placeholder="********" autoComplete="new-password" aria-invalid={errors.password !== undefined} />
+              {errors.password && <p className="formError">{errors.password.message}</p>}
             </dd>
           </dl>
           <button className="btn" disabled={isSubmitting} aria-busy={isSubmitting}>
