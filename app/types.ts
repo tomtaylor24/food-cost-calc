@@ -3,6 +3,7 @@ export type Dish = {
   user_id: string,
   name: string,
   selling_price: number | null,
+  note: string | null,
   created_at: string
 }
 
@@ -18,16 +19,31 @@ export type Ingredient = {
   id: number,
   user_id: string,
   name: string,
+  name_kana: string | null,
   purchase_price: number,
   purchase_quantity: number,
   unit: string,
+  yield_rate: number,
+  tax_add_rate: number,
+  supplier: string | null,
+  note: string | null,
   created_at: string
+}
+
+export type PriceHistoryRow = {
+  id: number
+  purchase_price: number
+  purchase_quantity: number
+  yield_rate: number
+  tax_add_rate: number
+  changed_at: string
 }
 
 export type IngredientDetail = Ingredient & {
   dish_ingredients: {
     count: number
   }[]
+  ingredient_price_history: PriceHistoryRow[]
 }
 
 export type RecipeRow = {
@@ -49,6 +65,8 @@ export type DishDetail = Dish & {
       unit: string
       purchase_price: number
       purchase_quantity: number
+      yield_rate: number
+      tax_add_rate: number
     }
   }[]
 }
@@ -76,6 +94,8 @@ export type DishListRow = Dish & {
     ingredients: {
       purchase_price: number
       purchase_quantity: number
+      yield_rate: number
+      tax_add_rate: number
     }
   }[]
 }

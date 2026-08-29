@@ -5,6 +5,8 @@ import Link from "next/link"
 import styles from "./page.module.scss"
 import toast from "react-hot-toast"
 import type { Ingredient } from "@/app/types"
+import { calcUnitPrice } from "@/app/utils/calcCost"
+import normalizeText from "@/app/utils/normalizeText"
 
 
 const IngredientsList = () => {
@@ -12,6 +14,7 @@ const IngredientsList = () => {
   const loginUserEmail = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
+  const [query, setQuery] = useState("")
 
   useEffect(() => {
     const getIngredients = async () => {
@@ -37,6 +40,13 @@ const IngredientsList = () => {
     }
     getIngredients()
   }, [])
+
+  const normalizedQuery = normalizeText(query.trim())
+  const visibleIngredients = normalizedQuery === ""
+    ? ingredients
+    : ingredients.filter((ingredient) =>
+      normalizeText(`${ingredient.name} ${ingredient.name_kana ?? ""} ${ingredient.supplier ?? ""}`).includes(normalizedQuery)
+    )
 
   const heading = (
     <div className="pageHeading">
@@ -112,27 +122,53 @@ const IngredientsList = () => {
           <Link href="/ingredients/create" className="btn">+ 新しい食材を登録</Link>
         </div>
       </div>
-      <p className="tableCount">全{ingredients.length}件</p>
-      <div className="tableCard">
-        <div className={styles.head}>
-          <div>食材名</div>
-          <div>仕入れ値</div>
-          <div>仕入れ量</div>
-          <div>単価</div>
+      <div className={styles.searchRow}>
+        <div className={styles.search}>
+          <input
+            id="ingredient-search"
+            type="search"
+            className={styles.searchInput}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="食材名・読み方・仕入先で検索"
+            aria-label="食材を検索"
+          />
+          {query !== "" && (
+            <button type="button" className={styles.searchClear} onClick={() => setQuery("")} aria-label="検索条件をクリア">×</button>
+          )}
         </div>
-        <ul>
-          {ingredients.map((ingredient) => (
-            <li className={styles.row} key={ingredient.id}>
-              <Link href={`/ingredients/${ingredient.id}`}>
-                <div>{ingredient.name}</div>
-                <div>￥{ingredient.purchase_price.toLocaleString()}</div>
-                <div>{ingredient.purchase_quantity.toLocaleString()}{ingredient.unit}</div>
-                <div>￥{(ingredient.purchase_price / ingredient.purchase_quantity).toFixed(2)} / {ingredient.unit}</div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <p className={styles.count} role="status">
+          {normalizedQuery === "" ? `全${ingredients.length}件` : `${ingredients.length}件中 ${visibleIngredients.length}件`}
+        </p>
       </div>
+      {visibleIngredients.length === 0 ? (
+        <div className="emptyState">
+          <p className="emptyStateTitle">見つかりませんでした</p>
+          <p className="emptyStateText">「{query}」に一致する食材はありません。<br className="pc" />別のことばでお試しください。</p>
+          <button type="button" className="btn emptyStateBtn" onClick={() => setQuery("")}>検索条件をクリア</button>
+        </div>
+      ) : (
+        <div className="tableCard">
+          <div className={styles.head}>
+            <div>食材名</div>
+            <div>仕入れ値</div>
+            <div>仕入れ量</div>
+            <div>単価</div>
+          </div>
+          <ul>
+            {visibleIngredients.map((ingredient) => (
+              <li className={styles.row} key={ingredient.id}>
+                <Link href={`/ingredients/${ingredient.id}`}>
+                  <div>{ingredient.name}</div>
+                  <div>￥{ingredient.purchase_price.toLocaleString()}</div>
+                  <div>{ingredient.purchase_quantity.toLocaleString()}{ingredient.unit}</div>
+                  <div>￥{calcUnitPrice(ingredient).toFixed(2)} / {ingredient.unit}</div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   )
 

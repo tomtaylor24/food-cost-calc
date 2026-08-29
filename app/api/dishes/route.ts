@@ -53,7 +53,8 @@ export async function POST(request: Request) {
         .insert({
           user_id: payload.userId,
           name: result.data.name,
-          selling_price: result.data.sellingPrice
+          selling_price: result.data.sellingPrice,
+          note: result.data.note
         })
         .select()
         .single()
@@ -115,7 +116,7 @@ export async function GET(request: Request) {
     try {
       const { data, error } = await supabase
         .from("dishes")
-        .select("*, dish_categories(categories(id, name)), dish_ingredients(quantity, ingredients(purchase_price, purchase_quantity))")
+        .select("*, dish_categories(categories(id, name)), dish_ingredients(quantity, ingredients(purchase_price, purchase_quantity, yield_rate, tax_add_rate))")
         .eq("user_id", payload.userId)
         .order("created_at", { ascending: false })
       if (error) throw new DbError(error)

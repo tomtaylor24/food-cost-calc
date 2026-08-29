@@ -20,7 +20,7 @@ export async function GET(request: Request, context: Context) {
       const params = await context.params
       const { data, error } = await supabase
         .from("dishes")
-        .select("*, dish_categories(category_id), dish_ingredients(id, ingredient_id, quantity, ingredients(name, unit, purchase_price, purchase_quantity))")
+        .select("*, dish_categories(category_id), dish_ingredients(id, ingredient_id, quantity, ingredients(name, unit, purchase_price, purchase_quantity, yield_rate, tax_add_rate))")
         .eq("id", params.id)
         .eq("user_id", payload.userId)
         .single()
@@ -99,7 +99,8 @@ export async function PUT(request: Request, context: Context) {
         .from("dishes")
         .update({
           name: result.data.name,
-          selling_price: result.data.sellingPrice
+          selling_price: result.data.sellingPrice,
+          note: result.data.note
         })
         .eq("id", params.id)
         .eq("user_id", payload.userId)

@@ -24,18 +24,39 @@ export async function POST(request: Request) {
           { status: 400 }
         )
       }
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("ingredients")
         .insert({
           user_id: payload.userId,
           name: result.data.name,
+          name_kana: result.data.nameKana,
           purchase_price: result.data.purchasePrice,
           purchase_quantity: result.data.purchaseQuantity,
-          unit: result.data.unit
+          unit: result.data.unit,
+          yield_rate: result.data.yieldRate,
+          tax_add_rate: result.data.taxAddRate,
+          supplier: result.data.supplier,
+          note: result.data.note
         })
+        .select("id")
+        .single()
       if (error) throw new DbError(error)
+
+      const inserted = data as { id: number }
+      const { error: historyError } = await supabase
+        .from("ingredient_price_history")
+        .insert({
+          ingredient_id: inserted.id,
+          purchase_price: result.data.purchasePrice,
+          purchase_quantity: result.data.purchaseQuantity,
+          yield_rate: result.data.yieldRate,
+          tax_add_rate: result.data.taxAddRate
+        })
+      if (historyError) console.log(historyError)
+
       return NextResponse.json({ message: "食材登録成功" }, { status: 201 })
     } catch (error) {
+      console.log(error)
       if (isUniqueViolation(error)) {
         return NextResponse.json({ message: "同じ名前の食材が既に登録されています" }, { status: 400 })
       }
@@ -55,6 +76,7 @@ export async function GET(request: Request) {
         .from("ingredients")
         .select()
         .eq("user_id", payload.userId)
+        .order("name_kana", { nullsFirst: false })
         .order("name")
       if (error) throw new DbError(error)
       return NextResponse.json({

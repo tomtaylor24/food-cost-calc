@@ -13,6 +13,14 @@ type NamedRow = {
   name: string
 }
 
+type DemoIngredientRow = NamedRow & {
+  purchase_price: number
+  purchase_quantity: number
+  yield_rate: number
+  tax_add_rate: number
+  created_at: string
+}
+
 const toIdByName = (rows: NamedRow[]) => {
   const idByName: Record<string, number> = {}
   for (const row of rows) {
@@ -56,9 +64,21 @@ export async function POST() {
     const { data: ingredientData, error: ingredientError } = await supabase
       .from("ingredients")
       .insert(DEMO_INGREDIENTS.map((ingredient) => ({ user_id: user.id, ...ingredient })))
-      .select("id, name")
+      .select("id, name, purchase_price, purchase_quantity, yield_rate, tax_add_rate, created_at")
     if (ingredientError) throw new DbError(ingredientError)
     const ingredientIdByName = toIdByName(ingredientData as NamedRow[])
+
+    const { error: historyError } = await supabase
+      .from("ingredient_price_history")
+      .insert((ingredientData as DemoIngredientRow[]).map((ingredient) => ({
+        ingredient_id: ingredient.id,
+        purchase_price: ingredient.purchase_price,
+        purchase_quantity: ingredient.purchase_quantity,
+        yield_rate: ingredient.yield_rate,
+        tax_add_rate: ingredient.tax_add_rate,
+        changed_at: ingredient.created_at
+      })))
+    if (historyError) console.log(historyError)
 
     const { data: dishData, error: dishError } = await supabase
       .from("dishes")

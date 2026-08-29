@@ -2,10 +2,12 @@
 import { useState, useEffect, useRef, useId } from "react"
 import type { KeyboardEvent } from "react"
 import styles from "./combobox.module.scss"
+import normalizeText from "@/app/utils/normalizeText"
 
 type Option = {
   value: string
   label: string
+  keywords?: string
 }
 
 type Props = {
@@ -42,7 +44,10 @@ const Combobox = ({
 
   const keyword = allowFreeInput ? value : query
   const inputValue = allowFreeInput ? value : (open ? query : selectedLabel)
-  const filteredOptions = options.filter((option) => option.label.includes(keyword))
+  const normalizedKeyword = normalizeText(keyword)
+  const filteredOptions = options.filter((option) =>
+    normalizeText(`${option.label} ${option.keywords ?? ""}`).includes(normalizedKeyword)
+  )
 
   useEffect(() => {
     if (!open) return
@@ -86,6 +91,8 @@ const Combobox = ({
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.nativeEvent.isComposing) return
+
     if (e.key === "ArrowDown") {
       e.preventDefault()
       if (!open) {
