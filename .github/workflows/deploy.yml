@@ -1,0 +1,49 @@
+name: Deploy
+
+# main へマージしたあとは branches を [main] に変える
+on:
+  push:
+    branches: [feature/mysql]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH鍵を用意
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: サーバー上で更新して再起動
+        run: |
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'bash -se' <<'SCRIPT'
+            set -euo pipefail
+            cd ~/genkalc
+            git fetch --quiet origin
+            git reset --hard --quiet origin/feature/mysql
+            npm install --no-audit --no-fund
+            npm run build
+            sudo systemctl restart genkalc
+          SCRIPT
+
+      - name: 起動を確認（失敗したらこのジョブを落とす）
+        run: |
+          for i in $(seq 1 12); do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" https://ik1-331-25649.vs.sakura.ne.jp/ || true)
+            if [ "$CODE" = "200" ]; then
+              echo "起動を確認しました (HTTP $CODE)"
+              exit 0
+            fi
+            echo "待機中... ($i/12) HTTP $CODE"
+            sleep 5
+          done
+          echo "60秒待っても 200 が返りませんでした"
+          exit 1
