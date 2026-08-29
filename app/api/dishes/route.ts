@@ -1,11 +1,31 @@
 import { NextResponse } from "next/server"
-import supabase from "@/app/utils/database"
+import type { RowDataPacket, ResultSetHeader } from "mysql2"
+import pool from "@/app/utils/db"
 import verifyToken from "@/app/utils/verifyToken"
 import calcDishCost from "@/app/utils/calcCost"
 import { dishSchema } from "@/app/utils/schemas"
 import readJson from "@/app/utils/readJson"
-import type { DishListRow } from "@/app/types"
-import { DbError, isUniqueViolation } from "@/app/utils/dbError"
+import type { Dish } from "@/app/types"
+import { isDuplicateEntry } from "@/app/utils/dbError"
+
+type IdRow = RowDataPacket & { id: number }
+
+type DishRow = Dish & RowDataPacket
+
+type ItemRow = RowDataPacket & {
+  dish_id: number
+  quantity: number
+  purchase_price: number
+  purchase_quantity: number
+  yield_rate: number
+  tax_add_rate: number
+}
+
+type CategoryRow = RowDataPacket & {
+  dish_id: number
+  id: number
+  name: string
+}
 
 export async function POST(request: Request) {
   const payload = await verifyToken(request)
@@ -13,96 +33,75 @@ export async function POST(request: Request) {
   if (!payload) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
   } else {
+    const connection = await pool.getConnection()
     try {
       const reqBody = await readJson(request)
       if (reqBody === null) {
-      return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
+        return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
       }
       const result = dishSchema.safeParse(reqBody)
       if (!result.success) {
         return NextResponse.json({ message: result.error.issues[0].message }, { status: 400 })
       }
-      for (const row of result.data.rows) {
-        const { error: ingredientError } = await supabase
-          .from("ingredients")
-          .select("id")
-          .eq("id", row.ingredientId)
-          .eq("user_id", payload.userId)
-          .single()
 
-        if (ingredientError) {
-          return NextResponse.json({ message: "食材が見つかりません" }, { status: 400 })
-        }
+      // 所有者チェックは IN でまとめて1回。件数が一致しなければ他人のものが混じっている
+      const ingredientIds = result.data.rows.map((row) => row.ingredientId)
+      const [foundIngredients] = await connection.query<IdRow[]>(
+        "SELECT id FROM ingredients WHERE id IN (?) AND user_id = ?",
+        [ingredientIds, payload.userId]
+      )
+      if (foundIngredients.length !== new Set(ingredientIds).size) {
+        return NextResponse.json({ message: "食材が見つかりません" }, { status: 400 })
       }
 
-      for (const categoryId of result.data.categoryIds) {
-        const { error: categoryError } = await supabase
-          .from("categories")
-          .select("id")
-          .eq("id", categoryId)
-          .eq("user_id", payload.userId)
-          .single()
-
-        if (categoryError) {
+      if (result.data.categoryIds.length > 0) {
+        const [foundCategories] = await connection.query<IdRow[]>(
+          "SELECT id FROM categories WHERE id IN (?) AND user_id = ?",
+          [result.data.categoryIds, payload.userId]
+        )
+        if (foundCategories.length !== new Set(result.data.categoryIds).size) {
           return NextResponse.json({ message: "カテゴリーが見つかりません" }, { status: 400 })
         }
       }
 
-      const { data, error } = await supabase
-        .from("dishes")
-        .insert({
-          user_id: payload.userId,
-          name: result.data.name,
-          selling_price: result.data.sellingPrice,
-          note: result.data.note
-        })
-        .select()
-        .single()
+      // ここから先はどれか1つでも失敗したら、まとめて無かったことにする
+      await connection.beginTransaction()
 
-      if (error) throw new DbError(error)
+      const [inserted] = await connection.execute<ResultSetHeader>(
+        "INSERT INTO dishes (user_id, name, selling_price, note) VALUES (?, ?, ?, ?)",
+        [payload.userId, result.data.name, result.data.sellingPrice, result.data.note]
+      )
+      const dishId = inserted.insertId
 
-      const inserted = data as { id: number }
-
-      const items = result.data.rows.map((row) => ({
-        dish_id: inserted.id,
-        ingredient_id: row.ingredientId,
-        quantity: row.quantity
-      }))
-
-      const { error: itemError } = await supabase
-        .from("dish_ingredients")
-        .insert(items)
-      if (itemError) {
-        await supabase.from("dishes").delete().eq("id", inserted.id)
-        throw new DbError(itemError)
-      }
+      await connection.query(
+        "INSERT INTO dish_ingredients (dish_id, ingredient_id, quantity) VALUES ?",
+        [result.data.rows.map((row) => [dishId, row.ingredientId, row.quantity])]
+      )
 
       if (result.data.categoryIds.length > 0) {
-        const categoryRows = result.data.categoryIds.map((categoryId) => ({
-          dish_id: inserted.id,
-          category_id: categoryId
-        }))
-        const { error: categoryInsertError } = await supabase
-          .from("dish_categories")
-          .insert(categoryRows)
-        if (categoryInsertError) {
-          await supabase.from("dishes").delete().eq("id", inserted.id)
-          throw new DbError(categoryInsertError)
-        }
+        await connection.query(
+          "INSERT INTO dish_categories (dish_id, category_id) VALUES ?",
+          [result.data.categoryIds.map((categoryId) => [dishId, categoryId])]
+        )
       }
+
+      await connection.commit()
       return NextResponse.json({ message: "商品登録成功" }, { status: 201 })
     } catch (error) {
-      console.log(error)
-      if (isUniqueViolation(error, "dish_ingredients")) {
+      await connection.rollback()
+      if (isDuplicateEntry(error, "dish_ingredients")) {
         return NextResponse.json({ message: "同じ食材が複数の行で選ばれています" }, { status: 400 })
       }
-      if (isUniqueViolation(error, "dish_categories")) {
+      if (isDuplicateEntry(error, "dish_categories")) {
         return NextResponse.json({ message: "同じカテゴリーが重複して選ばれています" }, { status: 400 })
       }
-      if (isUniqueViolation(error)) {
+      if (isDuplicateEntry(error)) {
         return NextResponse.json({ message: "同じ名前の商品が既に登録されています" }, { status: 400 })
       }
+      console.log(error)
       return NextResponse.json({ message: "商品登録に失敗しました" }, { status: 500 })
+    } finally {
+      connection.release()
     }
   }
 }
@@ -114,18 +113,59 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
   } else {
     try {
-      const { data, error } = await supabase
-        .from("dishes")
-        .select("*, dish_categories(categories(id, name)), dish_ingredients(quantity, ingredients(purchase_price, purchase_quantity, yield_rate, tax_add_rate))")
-        .eq("user_id", payload.userId)
-        .order("created_at", { ascending: false })
-      if (error) throw new DbError(error)
-      const rows = data as DishListRow[]
-      const dishesWithCost = rows.map((dish) => {
-        const cost = calcDishCost(dish.dish_ingredients)
-        const categories = dish.dish_categories.map((row) => row.categories)
-        return { ...dish, totalCost: cost, categories: categories }
-      })
+      const [dishes] = await pool.query<DishRow[]>(
+        `SELECT id, user_id, name, selling_price, note, created_at
+         FROM dishes
+         WHERE user_id = ?
+         ORDER BY created_at DESC`,
+        [payload.userId]
+      )
+      if (dishes.length === 0) {
+        return NextResponse.json({ message: "商品一覧の取得成功", dishes: [] }, { status: 200 })
+      }
+
+      // 商品ごとに問い合わせると N+1 になるので、全商品ぶんをまとめて2回で取る
+      const dishIds = dishes.map((dish) => dish.id)
+
+      const [items] = await pool.query<ItemRow[]>(
+        `SELECT di.dish_id, di.quantity,
+                i.purchase_price, i.purchase_quantity, i.yield_rate, i.tax_add_rate
+         FROM dish_ingredients di
+         JOIN ingredients i ON i.id = di.ingredient_id
+         WHERE di.dish_id IN (?)`,
+        [dishIds]
+      )
+
+      const [categories] = await pool.query<CategoryRow[]>(
+        `SELECT dc.dish_id, c.id, c.name
+         FROM dish_categories dc
+         JOIN categories c ON c.id = dc.category_id
+         WHERE dc.dish_id IN (?)
+         ORDER BY c.name`,
+        [dishIds]
+      )
+
+      // 取ってきた行を dish_id ごとに束ね直す
+      const itemsByDish = new Map<number, { quantity: number, ingredients: ItemRow }[]>()
+      for (const item of items) {
+        const list = itemsByDish.get(item.dish_id) ?? []
+        list.push({ quantity: item.quantity, ingredients: item })
+        itemsByDish.set(item.dish_id, list)
+      }
+
+      const categoriesByDish = new Map<number, { id: number, name: string }[]>()
+      for (const category of categories) {
+        const list = categoriesByDish.get(category.dish_id) ?? []
+        list.push({ id: category.id, name: category.name })
+        categoriesByDish.set(category.dish_id, list)
+      }
+
+      const dishesWithCost = dishes.map((dish) => ({
+        ...dish,
+        totalCost: calcDishCost(itemsByDish.get(dish.id) ?? []),
+        categories: categoriesByDish.get(dish.id) ?? []
+      }))
+
       return NextResponse.json({
         message: "商品一覧の取得成功",
         dishes: dishesWithCost

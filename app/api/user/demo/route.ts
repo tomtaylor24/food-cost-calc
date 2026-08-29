@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
-import supabase from "@/app/utils/database"
+import type { RowDataPacket } from "mysql2"
+import pool from "@/app/utils/db"
 import { issueToken } from "@/app/utils/jwt"
-import { DbError } from "@/app/utils/dbError"
 import { DEMO_CATEGORIES, DEMO_INGREDIENTS, DEMO_DISHES } from "@/app/utils/demoData"
-import type { User } from "@/app/types"
 
 const DEMO_LIFETIME_HOURS = 24
 
-type NamedRow = {
+type NamedRow = RowDataPacket & {
   id: number
   name: string
 }
@@ -18,7 +17,7 @@ type DemoIngredientRow = NamedRow & {
   purchase_quantity: number
   yield_rate: number
   tax_add_rate: number
-  created_at: string
+  created_at: Date
 }
 
 const toIdByName = (rows: NamedRow[]) => {
@@ -30,91 +29,110 @@ const toIdByName = (rows: NamedRow[]) => {
 }
 
 export async function POST() {
-  let createdUserId: string | null = null
-
+  // 期限切れの掃除は本題と切り離す。失敗してもデモ作成は続ける
   try {
-    const expiredAt = new Date(Date.now() - DEMO_LIFETIME_HOURS * 60 * 60 * 1000).toISOString()
-    const { error: cleanupError } = await supabase
-      .from("users")
-      .delete()
-      .eq("is_demo", true)
-      .lt("created_at", expiredAt)
-    if (cleanupError) console.log(cleanupError)
+    const expiredAt = new Date(Date.now() - DEMO_LIFETIME_HOURS * 60 * 60 * 1000)
+    // is_demo の条件を落とすと通常の会員まで消えるため、2条件を必ずセットで指定する
+    await pool.execute(
+      "DELETE FROM users WHERE is_demo = TRUE AND created_at < ?",
+      [expiredAt]
+    )
+  } catch (cleanupError) {
+    console.log(cleanupError)
+  }
 
+  const connection = await pool.getConnection()
+  try {
+    const userId = crypto.randomUUID()
     const email = `demo-${crypto.randomUUID()}@example.invalid`
     const passwordHash = await bcrypt.hash(crypto.randomUUID(), 10)
 
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .insert({ email: email, password_hash: passwordHash, is_demo: true })
-      .select()
-      .single()
-    if (userError) throw new DbError(userError)
+    // 途中で失敗したら丸ごと無かったことにする（作りかけのアカウントが残らない）
+    await connection.beginTransaction()
 
-    const user = userData as User
-    createdUserId = user.id
-    
-    const { data: categoryData, error: categoryError } = await supabase
-      .from("categories")
-      .insert(DEMO_CATEGORIES.map((name) => ({ user_id: user.id, name: name })))
-      .select("id, name")
-    if (categoryError) throw new DbError(categoryError)
-    const categoryIdByName = toIdByName(categoryData as NamedRow[])
+    await connection.execute(
+      "INSERT INTO users (id, email, password_hash, is_demo) VALUES (?, ?, ?, TRUE)",
+      [userId, email, passwordHash]
+    )
 
-    const { data: ingredientData, error: ingredientError } = await supabase
-      .from("ingredients")
-      .insert(DEMO_INGREDIENTS.map((ingredient) => ({ user_id: user.id, ...ingredient })))
-      .select("id, name, purchase_price, purchase_quantity, yield_rate, tax_add_rate, created_at")
-    if (ingredientError) throw new DbError(ingredientError)
-    const ingredientIdByName = toIdByName(ingredientData as NamedRow[])
+    await connection.query(
+      "INSERT INTO categories (user_id, name) VALUES ?",
+      [DEMO_CATEGORIES.map((name) => [userId, name])]
+    )
+    const [categoryRows] = await connection.query<NamedRow[]>(
+      "SELECT id, name FROM categories WHERE user_id = ?",
+      [userId]
+    )
+    const categoryIdByName = toIdByName(categoryRows)
 
-    const { error: historyError } = await supabase
-      .from("ingredient_price_history")
-      .insert((ingredientData as DemoIngredientRow[]).map((ingredient) => ({
-        ingredient_id: ingredient.id,
-        purchase_price: ingredient.purchase_price,
-        purchase_quantity: ingredient.purchase_quantity,
-        yield_rate: ingredient.yield_rate,
-        tax_add_rate: ingredient.tax_add_rate,
-        changed_at: ingredient.created_at
-      })))
-    if (historyError) console.log(historyError)
+    await connection.query(
+      "INSERT INTO ingredients (user_id, name, name_kana, purchase_price, purchase_quantity, unit) VALUES ?",
+      [DEMO_INGREDIENTS.map((ingredient) => [
+        userId,
+        ingredient.name,
+        ingredient.name_kana,
+        ingredient.purchase_price,
+        ingredient.purchase_quantity,
+        ingredient.unit
+      ])]
+    )
+    const [ingredientRows] = await connection.query<DemoIngredientRow[]>(
+      `SELECT id, name, purchase_price, purchase_quantity, yield_rate, tax_add_rate, created_at
+       FROM ingredients WHERE user_id = ?`,
+      [userId]
+    )
+    const ingredientIdByName = toIdByName(ingredientRows)
 
-    const { data: dishData, error: dishError } = await supabase
-      .from("dishes")
-      .insert(DEMO_DISHES.map((dish) => ({
-        user_id: user.id,
-        name: dish.name,
-        selling_price: dish.selling_price
-      })))
-      .select("id, name")
-    if (dishError) throw new DbError(dishError)
-    const dishIdByName = toIdByName(dishData as NamedRow[])
+    await connection.query(
+      `INSERT INTO ingredient_price_history
+         (ingredient_id, purchase_price, purchase_quantity, yield_rate, tax_add_rate, changed_at)
+       VALUES ?`,
+      [ingredientRows.map((ingredient) => [
+        ingredient.id,
+        ingredient.purchase_price,
+        ingredient.purchase_quantity,
+        ingredient.yield_rate,
+        ingredient.tax_add_rate,
+        ingredient.created_at
+      ])]
+    )
 
-    const dishCategories = DEMO_DISHES.flatMap((dish) => dish.categories.map((name) => ({
-      dish_id: dishIdByName[dish.name],
-      category_id: categoryIdByName[name]
-    })))
+    await connection.query(
+      "INSERT INTO dishes (user_id, name, selling_price) VALUES ?",
+      [DEMO_DISHES.map((dish) => [userId, dish.name, dish.selling_price])]
+    )
+    const [dishRows] = await connection.query<NamedRow[]>(
+      "SELECT id, name FROM dishes WHERE user_id = ?",
+      [userId]
+    )
+    const dishIdByName = toIdByName(dishRows)
 
-    const { error: dishCategoryError } = await supabase.from("dish_categories").insert(dishCategories)
-    if (dishCategoryError) throw new DbError(dishCategoryError)
+    await connection.query(
+      "INSERT INTO dish_categories (dish_id, category_id) VALUES ?",
+      [DEMO_DISHES.flatMap((dish) => dish.categories.map((name) => [
+        dishIdByName[dish.name],
+        categoryIdByName[name]
+      ]))]
+    )
 
-    const items = DEMO_DISHES.flatMap((dish) => dish.items.map((item) => ({
-      dish_id: dishIdByName[dish.name],
-      ingredient_id: ingredientIdByName[item.ingredient],
-      quantity: item.quantity
-    })))
+    await connection.query(
+      "INSERT INTO dish_ingredients (dish_id, ingredient_id, quantity) VALUES ?",
+      [DEMO_DISHES.flatMap((dish) => dish.items.map((item) => [
+        dishIdByName[dish.name],
+        ingredientIdByName[item.ingredient],
+        item.quantity
+      ]))]
+    )
 
-    const { error: itemError } = await supabase.from("dish_ingredients").insert(items)
-    if (itemError) throw new DbError(itemError)
+    await connection.commit()
 
-    const token = await issueToken(user.id, email)
+    const token = await issueToken(userId, email)
     return NextResponse.json({ message: "デモアカウントを準備しました", token: token }, { status: 201 })
   } catch (error) {
+    await connection.rollback()
     console.log(error)
-    if (createdUserId !== null) {
-      await supabase.from("users").delete().eq("id", createdUserId)
-    }
     return NextResponse.json({ message: "デモの準備に失敗しました" }, { status: 500 })
+  } finally {
+    connection.release()
   }
 }

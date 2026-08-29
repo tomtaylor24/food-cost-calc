@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import supabase from "@/app/utils/database";
+import type { RowDataPacket, ResultSetHeader } from "mysql2";
+import pool from "@/app/utils/db";
 import verifyToken from "@/app/utils/verifyToken";
 import { ingredientSchema } from "@/app/utils/schemas";
 import readJson from "@/app/utils/readJson";
 import type { Ingredient } from "@/app/types";
-import { DbError, isUniqueViolation } from "@/app/utils/dbError";
+import { isDuplicateEntry } from "@/app/utils/dbError";
+
+type IngredientRow = Ingredient & RowDataPacket
 
 export async function POST(request: Request) {
   const payload = await verifyToken(request)
@@ -15,7 +18,7 @@ export async function POST(request: Request) {
     try {
       const reqBody = await readJson(request)
       if (reqBody === null) {
-      return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
+        return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
       }
       const result = ingredientSchema.safeParse(reqBody)
       if (!result.success) {
@@ -24,42 +27,48 @@ export async function POST(request: Request) {
           { status: 400 }
         )
       }
-      const { data, error } = await supabase
-        .from("ingredients")
-        .insert({
-          user_id: payload.userId,
-          name: result.data.name,
-          name_kana: result.data.nameKana,
-          purchase_price: result.data.purchasePrice,
-          purchase_quantity: result.data.purchaseQuantity,
-          unit: result.data.unit,
-          yield_rate: result.data.yieldRate,
-          tax_add_rate: result.data.taxAddRate,
-          supplier: result.data.supplier,
-          note: result.data.note
-        })
-        .select("id")
-        .single()
-      if (error) throw new DbError(error)
+      const [inserted] = await pool.execute<ResultSetHeader>(
+        `INSERT INTO ingredients
+           (user_id, name, name_kana, purchase_price, purchase_quantity, unit, yield_rate, tax_add_rate, supplier, note)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          payload.userId,
+          result.data.name,
+          result.data.nameKana,
+          result.data.purchasePrice,
+          result.data.purchaseQuantity,
+          result.data.unit,
+          result.data.yieldRate,
+          result.data.taxAddRate,
+          result.data.supplier,
+          result.data.note
+        ]
+      )
 
-      const inserted = data as { id: number }
-      const { error: historyError } = await supabase
-        .from("ingredient_price_history")
-        .insert({
-          ingredient_id: inserted.id,
-          purchase_price: result.data.purchasePrice,
-          purchase_quantity: result.data.purchaseQuantity,
-          yield_rate: result.data.yieldRate,
-          tax_add_rate: result.data.taxAddRate
-        })
-      if (historyError) console.log(historyError)
+      // 履歴は失敗しても登録自体は成功として扱う（記録が主目的で、無くても原価計算は成立するため）
+      try {
+        await pool.execute(
+          `INSERT INTO ingredient_price_history
+             (ingredient_id, purchase_price, purchase_quantity, yield_rate, tax_add_rate)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            inserted.insertId,
+            result.data.purchasePrice,
+            result.data.purchaseQuantity,
+            result.data.yieldRate,
+            result.data.taxAddRate
+          ]
+        )
+      } catch (historyError) {
+        console.log(historyError)
+      }
 
       return NextResponse.json({ message: "食材登録成功" }, { status: 201 })
     } catch (error) {
-      console.log(error)
-      if (isUniqueViolation(error)) {
+      if (isDuplicateEntry(error)) {
         return NextResponse.json({ message: "同じ名前の食材が既に登録されています" }, { status: 400 })
       }
+      console.log(error)
       return NextResponse.json({ message: "食材登録に失敗しました" }, { status: 500 })
     }
   }
@@ -72,16 +81,19 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
   } else {
     try {
-      const { data, error } = await supabase
-        .from("ingredients")
-        .select()
-        .eq("user_id", payload.userId)
-        .order("name_kana", { nullsFirst: false })
-        .order("name")
-      if (error) throw new DbError(error)
+      // MySQL は NULL を先頭に並べるため、(name_kana IS NULL) を第1キーにして最後へ送る
+      // PostgreSQL の NULLS LAST に相当する
+      const [rows] = await pool.query<IngredientRow[]>(
+        `SELECT id, user_id, name, name_kana, purchase_price, purchase_quantity,
+                unit, yield_rate, tax_add_rate, supplier, note, created_at
+         FROM ingredients
+         WHERE user_id = ?
+         ORDER BY (name_kana IS NULL), name_kana, name`,
+        [payload.userId]
+      )
       return NextResponse.json({
         message: "食材一覧の取得成功",
-        ingredients: data as Ingredient[]
+        ingredients: rows
       },
         { status: 200 }
       )

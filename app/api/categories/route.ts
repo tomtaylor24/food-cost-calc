@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import supabase from "@/app/utils/database";
+import type { RowDataPacket, ResultSetHeader } from "mysql2";
+import pool from "@/app/utils/db";
 import verifyToken from "@/app/utils/verifyToken";
 import { categorySchema } from "@/app/utils/schemas";
 import readJson from "@/app/utils/readJson";
 import type { Category } from "@/app/types";
-import { DbError, isUniqueViolation } from "@/app/utils/dbError";
+import { isDuplicateEntry } from "@/app/utils/dbError";
+
+type CategoryRow = Category & RowDataPacket
 
 export async function POST(request: Request) {
   const payload = await verifyToken(request)
@@ -15,7 +18,7 @@ export async function POST(request: Request) {
     try {
       const reqBody = await readJson(request)
       if (reqBody === null) {
-      return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
+        return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
       }
       const result = categorySchema.safeParse(reqBody)
       if (!result.success) {
@@ -24,23 +27,23 @@ export async function POST(request: Request) {
           { status: 400 }
         )
       }
-      const { data, error } = await supabase
-        .from("categories")
-        .insert({
-          user_id: payload.userId,
-          name: result.data.name
-        })
-        .select()
-        .single()
-      if (error) throw new DbError(error)
-      return NextResponse.json({ 
+      const [inserted] = await pool.execute<ResultSetHeader>(
+        "INSERT INTO categories (user_id, name) VALUES (?, ?)",
+        [payload.userId, result.data.name]
+      )
+      const [rows] = await pool.query<CategoryRow[]>(
+        "SELECT id, user_id, name, created_at FROM categories WHERE id = ?",
+        [inserted.insertId]
+      )
+      return NextResponse.json({
         message: "カテゴリー登録成功",
-        category: data as Category 
+        category: rows[0]
       }, { status: 201 })
     } catch (error) {
-      if (isUniqueViolation(error)) {
+      if (isDuplicateEntry(error)) {
         return NextResponse.json({ message: "同じ名前のカテゴリーが既に登録されています" }, { status: 400 })
       }
+      console.log(error)
       return NextResponse.json({ message: "カテゴリー登録に失敗しました" }, { status: 500 })
     }
   }
@@ -53,15 +56,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
   } else {
     try {
-      const { data, error } = await supabase
-        .from("categories")
-        .select()
-        .eq("user_id", payload.userId)
-        .order("name")
-      if (error) throw new DbError(error)
+      const [rows] = await pool.query<CategoryRow[]>(
+        "SELECT id, user_id, name, created_at FROM categories WHERE user_id = ? ORDER BY name",
+        [payload.userId]
+      )
       return NextResponse.json({
         message: "カテゴリー一覧の取得成功",
-        categories: data as Category[]
+        categories: rows
       },
         { status: 200 }
       )

@@ -1,16 +1,24 @@
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
-import supabase from "@/app/utils/database"
+import type { RowDataPacket } from "mysql2"
+import pool from "@/app/utils/db"
 import { resetPasswordSchema } from "@/app/utils/schemas"
 import readJson from "@/app/utils/readJson"
 import hashToken from "@/app/utils/hashToken"
-import { DbError, isNotFound } from "@/app/utils/dbError"
 
 type Props = {
   params: Promise<{ token: string }>
 }
 
+type ResetTokenRow = RowDataPacket & {
+  user_id: string
+  expires_at: Date
+}
+
+const INVALID_MESSAGE = "このリンクは無効か、有効期限が切れています"
+
 export async function POST(request: Request, context: Props) {
+  const connection = await pool.getConnection()
   try {
     const reqBody = await readJson(request)
     if (reqBody === null) {
@@ -22,37 +30,39 @@ export async function POST(request: Request, context: Props) {
     }
     const params = await context.params
     const tokenHash = await hashToken(params.token)
-    const { data, error } = await supabase
-      .from("password_reset_tokens")
-      .select("user_id, expires_at")
-      .eq("token_hash", tokenHash)
-      .single()
-    if (error) throw new DbError(error)
-    const resetToken = data as { user_id: string, expires_at: string }
+
+    const [tokens] = await connection.query<ResetTokenRow[]>(
+      "SELECT user_id, expires_at FROM password_reset_tokens WHERE token_hash = ?",
+      [tokenHash]
+    )
+    if (tokens.length === 0) {
+      return NextResponse.json({ message: INVALID_MESSAGE }, { status: 400 })
+    }
+    const resetToken = tokens[0]
 
     if (new Date(resetToken.expires_at) < new Date()) {
-      return NextResponse.json({ message: "このリンクは無効か、有効期限が切れています" }, { status: 400 })
+      return NextResponse.json({ message: INVALID_MESSAGE }, { status: 400 })
     }
 
-    const { error: deleteError } = await supabase
-      .from("password_reset_tokens")
-      .delete()
-      .eq("user_id", resetToken.user_id)
-    if (deleteError) throw new DbError(deleteError)
-
+    // トークンの削除とパスワード更新は必ず両方成立させる
+    await connection.beginTransaction()
+    await connection.execute(
+      "DELETE FROM password_reset_tokens WHERE user_id = ?",
+      [resetToken.user_id]
+    )
     const passwordHash = await bcrypt.hash(result.data.password, 10)
-    const { error: updateError } = await supabase
-      .from("users")
-      .update({ password_hash: passwordHash })
-      .eq("id", resetToken.user_id)
-    if (updateError) throw new DbError(updateError)
+    await connection.execute(
+      "UPDATE users SET password_hash = ? WHERE id = ?",
+      [passwordHash, resetToken.user_id]
+    )
+    await connection.commit()
 
     return NextResponse.json({ message: "パスワードを再設定しました" }, { status: 200 })
   } catch (error) {
+    await connection.rollback()
     console.log(error)
-    if (isNotFound(error)) {
-      return NextResponse.json({ message: "このリンクは無効か、有効期限が切れています" }, { status: 400 })
-    }
     return NextResponse.json({ message: "パスワードの再設定に失敗しました" }, { status: 500 })
+  } finally {
+    connection.release()
   }
 }

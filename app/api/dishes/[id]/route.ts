@@ -1,14 +1,33 @@
 import { NextResponse } from "next/server"
-import supabase from "@/app/utils/database"
+import type { RowDataPacket, ResultSetHeader } from "mysql2"
+import pool from "@/app/utils/db"
 import verifyToken from "@/app/utils/verifyToken"
 import { dishSchema } from "@/app/utils/schemas"
 import readJson from "@/app/utils/readJson"
-import type { OldDishRow } from "@/app/types"
-import { DbError, isUniqueViolation, isNotFound } from "@/app/utils/dbError"
+import type { Dish } from "@/app/types"
+import { isDuplicateEntry } from "@/app/utils/dbError"
 
 type Context = {
   params: Promise<{ id: string }>
 }
+
+type IdRow = RowDataPacket & { id: number }
+
+type DishRow = Dish & RowDataPacket
+
+type DetailItemRow = RowDataPacket & {
+  id: number
+  ingredient_id: number
+  quantity: number
+  name: string
+  unit: string
+  purchase_price: number
+  purchase_quantity: number
+  yield_rate: number
+  tax_add_rate: number
+}
+
+type CategoryIdRow = RowDataPacket & { category_id: number }
 
 export async function GET(request: Request, context: Context) {
   const payload = await verifyToken(request)
@@ -18,22 +37,52 @@ export async function GET(request: Request, context: Context) {
   } else {
     try {
       const params = await context.params
-      const { data, error } = await supabase
-        .from("dishes")
-        .select("*, dish_categories(category_id), dish_ingredients(id, ingredient_id, quantity, ingredients(name, unit, purchase_price, purchase_quantity, yield_rate, tax_add_rate))")
-        .eq("id", params.id)
-        .eq("user_id", payload.userId)
-        .single()
-      if (error) throw new DbError(error)
+      const [dishes] = await pool.query<DishRow[]>(
+        `SELECT id, user_id, name, selling_price, note, created_at
+         FROM dishes
+         WHERE id = ? AND user_id = ?`,
+        [params.id, payload.userId]
+      )
+      if (dishes.length === 0) {
+        return NextResponse.json({ message: "商品が見つかりません" }, { status: 404 })
+      }
+
+      const [items] = await pool.query<DetailItemRow[]>(
+        `SELECT di.id, di.ingredient_id, di.quantity,
+                i.name, i.unit, i.purchase_price, i.purchase_quantity, i.yield_rate, i.tax_add_rate
+         FROM dish_ingredients di
+         JOIN ingredients i ON i.id = di.ingredient_id
+         WHERE di.dish_id = ?`,
+        [params.id]
+      )
+
+      const [categories] = await pool.query<CategoryIdRow[]>(
+        "SELECT category_id FROM dish_categories WHERE dish_id = ?",
+        [params.id]
+      )
+
       return NextResponse.json({
         message: "商品詳細取得成功",
-        dish: data
+        dish: {
+          ...dishes[0],
+          dish_categories: categories,
+          dish_ingredients: items.map((item) => ({
+            id: item.id,
+            ingredient_id: item.ingredient_id,
+            quantity: item.quantity,
+            ingredients: {
+              name: item.name,
+              unit: item.unit,
+              purchase_price: item.purchase_price,
+              purchase_quantity: item.purchase_quantity,
+              yield_rate: item.yield_rate,
+              tax_add_rate: item.tax_add_rate
+            }
+          }))
+        }
       }, { status: 200 })
     } catch (error) {
       console.log(error)
-      if (isNotFound(error)) {
-        return NextResponse.json({ message: "商品が見つかりません" }, { status: 404 })
-      }
       return NextResponse.json({ message: "商品の取得に失敗しました" }, { status: 500 })
     }
   }
@@ -45,6 +94,7 @@ export async function PUT(request: Request, context: Context) {
   if (!payload) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
   } else {
+    const connection = await pool.getConnection()
     try {
       const reqBody = await readJson(request)
       if (reqBody === null) {
@@ -56,117 +106,73 @@ export async function PUT(request: Request, context: Context) {
         return NextResponse.json({ message: result.error.issues[0].message }, { status: 400 })
       }
 
-      for (const row of result.data.rows) {
-        const { error: ingredientError } = await supabase
-          .from("ingredients")
-          .select("id")
-          .eq("id", row.ingredientId)
-          .eq("user_id", payload.userId)
-          .single()
-
-        if (ingredientError) {
-          return NextResponse.json({ message: "食材が見つかりません" }, { status: 400 })
-        }
+      const [target] = await connection.query<IdRow[]>(
+        "SELECT id FROM dishes WHERE id = ? AND user_id = ?",
+        [params.id, payload.userId]
+      )
+      if (target.length === 0) {
+        return NextResponse.json({ message: "商品が見つかりません" }, { status: 404 })
       }
 
-      for (const categoryId of result.data.categoryIds) {
-        const { error: categoryError } = await supabase
-          .from("categories")
-          .select("id")
-          .eq("id", categoryId)
-          .eq("user_id", payload.userId)
-          .single()
+      const ingredientIds = result.data.rows.map((row) => row.ingredientId)
+      const [foundIngredients] = await connection.query<IdRow[]>(
+        "SELECT id FROM ingredients WHERE id IN (?) AND user_id = ?",
+        [ingredientIds, payload.userId]
+      )
+      if (foundIngredients.length !== new Set(ingredientIds).size) {
+        return NextResponse.json({ message: "食材が見つかりません" }, { status: 400 })
+      }
 
-        if (categoryError) {
+      if (result.data.categoryIds.length > 0) {
+        const [foundCategories] = await connection.query<IdRow[]>(
+          "SELECT id FROM categories WHERE id IN (?) AND user_id = ?",
+          [result.data.categoryIds, payload.userId]
+        )
+        if (foundCategories.length !== new Set(result.data.categoryIds).size) {
           return NextResponse.json({ message: "カテゴリーが見つかりません" }, { status: 400 })
         }
       }
 
-      const { data: oldDish, error: oldError } = await supabase
-        .from("dishes")
-        .select("id, dish_ingredients(ingredient_id, quantity), dish_categories(category_id)")
-        .eq("id", params.id)
-        .eq("user_id", payload.userId)
-        .single()
+      // 商品名・売価の更新と、レシピ・カテゴリーの入れ替えを1つのまとまりにする。
+      // 途中で失敗すれば全部が無かったことになるので、控えから戻す処理は不要になった。
+      await connection.beginTransaction()
 
-      if (oldError) {
-        return NextResponse.json({ message: "商品が見つかりません" }, { status: 404 })
-      }
+      await connection.execute(
+        "UPDATE dishes SET name = ?, selling_price = ?, note = ? WHERE id = ? AND user_id = ?",
+        [result.data.name, result.data.sellingPrice, result.data.note, params.id, payload.userId]
+      )
 
-      const previousDish = oldDish as OldDishRow
+      await connection.execute("DELETE FROM dish_ingredients WHERE dish_id = ?", [params.id])
+      await connection.query(
+        "INSERT INTO dish_ingredients (dish_id, ingredient_id, quantity) VALUES ?",
+        [result.data.rows.map((row) => [params.id, row.ingredientId, row.quantity])]
+      )
 
-      const { error } = await supabase
-        .from("dishes")
-        .update({
-          name: result.data.name,
-          selling_price: result.data.sellingPrice,
-          note: result.data.note
-        })
-        .eq("id", params.id)
-        .eq("user_id", payload.userId)
-      if (error) throw new DbError(error)
-      await supabase
-        .from("dish_ingredients")
-        .delete()
-        .eq("dish_id", params.id)
-      const items = result.data.rows.map((row) => ({
-        dish_id: Number(params.id),
-        ingredient_id: row.ingredientId,
-        quantity: row.quantity
-      }))
-      const { error: itemError } = await supabase
-        .from("dish_ingredients")
-        .insert(items)
-      if (itemError) {
-        await supabase
-        .from("dish_ingredients")
-        .insert(
-          previousDish.dish_ingredients.map((old) => ({
-            dish_id: Number(params.id),
-            ingredient_id: old.ingredient_id,
-            quantity: old.quantity
-          }))
-        )
-        throw new DbError(itemError)
-      }
-
-      await supabase
-        .from("dish_categories")
-        .delete()
-        .eq("dish_id", params.id)
+      await connection.execute("DELETE FROM dish_categories WHERE dish_id = ?", [params.id])
       if (result.data.categoryIds.length > 0) {
-        const categoryRows = result.data.categoryIds.map((categoryId) => ({
-          dish_id: Number(params.id),
-          category_id: categoryId
-        }))
-        const { error: categoryInsertError } = await supabase
-          .from("dish_categories")
-          .insert(categoryRows)
-        if (categoryInsertError) {
-          if (previousDish.dish_categories.length > 0) {
-            await supabase.from("dish_categories").insert(
-              previousDish.dish_categories.map((old) => ({
-                dish_id: Number(params.id),
-                category_id: old.category_id
-              }))
-            )
-          }
-          throw new DbError(categoryInsertError)
-        }
+        await connection.query(
+          "INSERT INTO dish_categories (dish_id, category_id) VALUES ?",
+          [result.data.categoryIds.map((categoryId) => [params.id, categoryId])]
+        )
       }
+
+      await connection.commit()
       return NextResponse.json({ message: "商品編集成功" }, { status: 200 })
     } catch (error) {
-      console.log(error)
-      if (isUniqueViolation(error, "dish_ingredients")) {
+      await connection.rollback()
+      if (isDuplicateEntry(error, "dish_ingredients")) {
         return NextResponse.json({ message: "同じ食材が複数の行で選ばれています" }, { status: 400 })
       }
-      if (isUniqueViolation(error, "dish_categories")) {
+      if (isDuplicateEntry(error, "dish_categories")) {
         return NextResponse.json({ message: "同じカテゴリーが重複して選ばれています" }, { status: 400 })
       }
-      if (isUniqueViolation(error)) {
+      if (isDuplicateEntry(error)) {
         return NextResponse.json({ message: "同じ名前の商品が既に登録されています" }, { status: 400 })
       }
+      console.log(error)
       return NextResponse.json({ message: "商品編集に失敗しました" }, { status: 500 })
+    } finally {
+      connection.release()
     }
   }
 }
@@ -178,12 +184,13 @@ export async function DELETE(request: Request, context: Context) {
   } else {
     try {
       const params = await context.params
-      const { error } = await supabase
-        .from("dishes")
-        .delete()
-        .eq("id", params.id)
-        .eq("user_id", payload.userId)
-      if (error) throw new DbError(error)
+      const [result] = await pool.execute<ResultSetHeader>(
+        "DELETE FROM dishes WHERE id = ? AND user_id = ?",
+        [params.id, payload.userId]
+      )
+      if (result.affectedRows === 0) {
+        return NextResponse.json({ message: "商品が見つかりません" }, { status: 404 })
+      }
       return NextResponse.json({ message: "商品削除成功" }, { status: 200 })
     } catch (error) {
       console.log(error)

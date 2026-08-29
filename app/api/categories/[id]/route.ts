@@ -1,7 +1,7 @@
 import verifyToken from "@/app/utils/verifyToken";
 import { NextResponse } from "next/server";
-import supabase from "@/app/utils/database";
-import { DbError } from "@/app/utils/dbError";
+import type { ResultSetHeader } from "mysql2";
+import pool from "@/app/utils/db";
 
 type Context = {
   params: Promise<{id: string}>
@@ -14,11 +14,14 @@ export async function DELETE(request: Request, context: Context) {
   } else {
     try {
       const params = await context.params
-      const { error } = await supabase.from("categories")
-        .delete()
-        .eq("id", params.id)
-        .eq("user_id", payload.userId)
-      if (error) throw new DbError(error)
+      // user_id を条件に入れることで、他人のカテゴリーは消せない
+      const [result] = await pool.execute<ResultSetHeader>(
+        "DELETE FROM categories WHERE id = ? AND user_id = ?",
+        [params.id, payload.userId]
+      )
+      if (result.affectedRows === 0) {
+        return NextResponse.json({ message: "カテゴリーが見つかりません" }, { status: 404 })
+      }
       return NextResponse.json({ message: "カテゴリー削除成功" }, { status: 200 })
     } catch (error) {
       console.log(error)
