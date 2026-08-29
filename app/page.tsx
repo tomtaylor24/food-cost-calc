@@ -60,17 +60,6 @@ const SORT_ROWS = [
   { name: "ハンバーグ定食", price: 1280, cost: 458, rate: 36 },
 ]
 
-const TECH_STACK = [
-  "Next.js 16 (App Router)",
-  "TypeScript",
-  "React 19",
-  "Supabase (PostgreSQL)",
-  "自前JWT認証 (jose / bcrypt)",
-  "Zod",
-  "SCSS Modules",
-  "GitHub Actions (CI)",
-]
-
 const yen = (value: number) => `￥${value.toLocaleString()}`
 
 const HeroMock = () => {
@@ -236,7 +225,6 @@ const Landing = () => {
             <ul className={styles.navList}>
               <li className="pc"><a href="#flowTitle" className={styles.navLink}>使い方の流れ</a></li>
               <li className="pc"><a href="#featuresTitle" className={styles.navLink}>できること</a></li>
-              <li className="pc"><a href="#techTitle" className={styles.navLink}>技術スタック</a></li>
               <li><Link href="/user/login" className={styles.navLink}>ログイン</Link></li>
             </ul>
             <Link href="/user/register" className={styles.navRegister}>会員登録</Link>
@@ -330,22 +318,12 @@ const Landing = () => {
           </div>
         </section>
 
-        <section className={styles.tech} aria-labelledby="techTitle">
-          <div className={styles.inner}>
-            <h2 className={styles.sectionTitle} id="techTitle">技術スタック</h2>
-            <ul className={styles.techList}>
-              {TECH_STACK.map((tech) => (
-                <li className={styles.techItem} key={tech}>{tech}</li>
-              ))}
-            </ul>
-            <a className={styles.techLink} href={GITHUB_URL} target="_blank" rel="noreferrer">GitHubでコードを見る</a>
-          </div>
-        </section>
       </main>
 
       <footer className={styles.footer}>
-        <div className={styles.inner}>
+        <div className={`${styles.inner} ${styles.footerInner}`}>
           <p className={styles.footerText}>© 2026 Genkalc</p>
+          <a className={styles.footerLink} href={GITHUB_URL} target="_blank" rel="noreferrer">GitHubでコードを見る</a>
         </div>
       </footer>
     </div>
