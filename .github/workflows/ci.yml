@@ -9,9 +9,10 @@ jobs:
   check:
     runs-on: ubuntu-latest
     env:
-      SUPABASE_URL: https://example.supabase.co
-      SUPABASE_SECRET_KEY: dummy-key-for-ci
+      # 起動時に env を検証して throw するため、ビルドを通すにはダミーでも値が要る。
+      # createPool は実際に接続しにいかないので、ここでは MySQL の起動は不要。
       JWT_SECRET: dummy-secret-for-ci
+      DATABASE_URL: mysql://dummy:dummy@127.0.0.1:3306/dummy
     steps:
       - uses: actions/checkout@v4
 
