@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import type { RowDataPacket } from "mysql2"
+import type { PoolConnection } from "mysql2/promise"
 import pool from "@/app/utils/db"
 import { issueToken } from "@/app/utils/jwt"
 import { DEMO_CATEGORIES, DEMO_INGREDIENTS, DEMO_DISHES } from "@/app/utils/demoData"
@@ -41,8 +42,9 @@ export async function POST() {
     console.log(cleanupError)
   }
 
-  const connection = await pool.getConnection()
+  let connection: PoolConnection | undefined
   try {
+    connection = await pool.getConnection()
     const userId = crypto.randomUUID()
     const email = `demo-${crypto.randomUUID()}@example.invalid`
     const passwordHash = await bcrypt.hash(crypto.randomUUID(), 10)
@@ -129,10 +131,14 @@ export async function POST() {
     const token = await issueToken(userId, email)
     return NextResponse.json({ message: "デモアカウントを準備しました", token: token }, { status: 201 })
   } catch (error) {
-    await connection.rollback()
+    try {
+      await connection?.rollback()
+    } catch (rollbackError) {
+      console.error("ロールバックに失敗しました", rollbackError)
+    }
     console.log(error)
     return NextResponse.json({ message: "デモの準備に失敗しました" }, { status: 500 })
   } finally {
-    connection.release()
+    connection?.release()
   }
 }

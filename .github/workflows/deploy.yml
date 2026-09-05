@@ -1,9 +1,8 @@
 name: Deploy
 
-# main へマージしたあとは branches を [main] に変える
 on:
   push:
-    branches: [feature/mysql]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -28,7 +27,7 @@ jobs:
             set -euo pipefail
             cd ~/genkalc
             git fetch --quiet origin
-            git reset --hard --quiet origin/feature/mysql
+            git reset --hard --quiet origin/main
             npm install --no-audit --no-fund
             npm run build
             sudo systemctl restart genkalc

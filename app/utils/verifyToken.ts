@@ -20,7 +20,8 @@ const verifyToken = async (request: Request): Promise<Payload | null> => {
       userId: payload.userId,
       email: payload.email
     }
-  }catch{
+  }catch(error){
+    console.error("JWTの検証に失敗しました", error)
     return null
   }
 }

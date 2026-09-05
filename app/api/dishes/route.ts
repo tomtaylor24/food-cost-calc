@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import type { RowDataPacket, ResultSetHeader } from "mysql2"
+import type { PoolConnection } from "mysql2/promise"
 import pool from "@/app/utils/db"
 import verifyToken from "@/app/utils/verifyToken"
 import calcDishCost from "@/app/utils/calcCost"
@@ -33,8 +34,9 @@ export async function POST(request: Request) {
   if (!payload) {
     return NextResponse.json({ message: "トークンが有効ではありません" }, { status: 401 })
   } else {
-    const connection = await pool.getConnection()
+    let connection: PoolConnection | undefined
     try {
+      connection = await pool.getConnection()
       const reqBody = await readJson(request)
       if (reqBody === null) {
         return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
@@ -88,7 +90,11 @@ export async function POST(request: Request) {
       await connection.commit()
       return NextResponse.json({ message: "商品登録成功" }, { status: 201 })
     } catch (error) {
-      await connection.rollback()
+      try {
+        await connection?.rollback()
+      } catch (rollbackError) {
+        console.error("ロールバックに失敗しました", rollbackError)
+      }
       if (isDuplicateEntry(error, "dish_ingredients")) {
         return NextResponse.json({ message: "同じ食材が複数の行で選ばれています" }, { status: 400 })
       }
@@ -101,7 +107,7 @@ export async function POST(request: Request) {
       console.log(error)
       return NextResponse.json({ message: "商品登録に失敗しました" }, { status: 500 })
     } finally {
-      connection.release()
+      connection?.release()
     }
   }
 }

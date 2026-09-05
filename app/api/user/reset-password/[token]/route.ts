@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import type { RowDataPacket } from "mysql2"
+import type { PoolConnection } from "mysql2/promise"
 import pool from "@/app/utils/db"
 import { resetPasswordSchema } from "@/app/utils/schemas"
 import readJson from "@/app/utils/readJson"
@@ -18,8 +19,9 @@ type ResetTokenRow = RowDataPacket & {
 const INVALID_MESSAGE = "このリンクは無効か、有効期限が切れています"
 
 export async function POST(request: Request, context: Props) {
-  const connection = await pool.getConnection()
+  let connection: PoolConnection | undefined
   try {
+    connection = await pool.getConnection()
     const reqBody = await readJson(request)
     if (reqBody === null) {
       return NextResponse.json({ message: "リクエストの形式が正しくありません" }, { status: 400 })
@@ -59,10 +61,14 @@ export async function POST(request: Request, context: Props) {
 
     return NextResponse.json({ message: "パスワードを再設定しました" }, { status: 200 })
   } catch (error) {
-    await connection.rollback()
+    try {
+      await connection?.rollback()
+    } catch (rollbackError) {
+      console.error("ロールバックに失敗しました", rollbackError)
+    }
     console.log(error)
     return NextResponse.json({ message: "パスワードの再設定に失敗しました" }, { status: 500 })
   } finally {
-    connection.release()
+    connection?.release()
   }
 }
