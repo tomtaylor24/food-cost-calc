@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useRef, useId } from "react"
-import type { KeyboardEvent } from "react"
+import type { KeyboardEvent, Ref } from "react"
 import styles from "./combobox.module.scss"
 import normalizeText from "@/app/utils/normalizeText"
 
@@ -20,6 +20,7 @@ type Props = {
   maxLength?: number
   ariaLabel?: string
   emptyMessage?: string
+  ref?: Ref<HTMLInputElement>
 }
 
 const Combobox = ({
@@ -31,7 +32,8 @@ const Combobox = ({
   required,
   maxLength,
   ariaLabel,
-  emptyMessage = "該当する候補がありません"
+  emptyMessage = "該当する候補がありません",
+  ref
 }: Props) => {
   const [query, setQuery] = useState("")
   const [open, setOpen] = useState(false)
@@ -126,6 +128,7 @@ const Combobox = ({
   return (
     <div className={styles.combobox} ref={containerRef}>
       <input
+        ref={ref}
         className={styles.input}
         type="text"
         role="combobox"

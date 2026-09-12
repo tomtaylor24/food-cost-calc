@@ -171,6 +171,7 @@ const CreateDishes = () => {
                             options={ingredientOptions.filter((option) => !usedByOthers.includes(option.value))}
                             value={comboField.value}
                             onChange={comboField.onChange}
+                            ref={comboField.ref}
                             placeholder="食材を検索"
                             ariaLabel={`${index + 1}行目の食材`}
                             emptyMessage="該当する食材がありません"
@@ -213,7 +214,7 @@ const CreateDishes = () => {
                 ? <p className="formError" key={field.id}>{index + 1}行目：{errors.rows[index].quantity.message}</p>
                 : null
             ))}
-            <button className={styles.addBtn} type="button" onClick={() => append({ ingredientId: "", quantity: "" })}>＋ 食材を追加</button>
+            <button className={styles.addBtn} type="button" onClick={() => append({ ingredientId: "", quantity: "" }, { focusName: `rows.${fields.length}.ingredientId` })}>＋ 食材を追加</button>
           </div>
 
           <Controller
