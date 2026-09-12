@@ -159,10 +159,21 @@ const IngredientsList = () => {
             {visibleIngredients.map((ingredient) => (
               <li className={styles.row} key={ingredient.id}>
                 <Link href={`/ingredients/${ingredient.id}`}>
-                  <div>{ingredient.name}</div>
+                  <div className={styles.nameCell}>
+                    <span className={styles.name}>{ingredient.name}</span>
+                    {ingredient.supplier && <span className={styles.supplier}>{ingredient.supplier}</span>}
+                  </div>
                   <div>￥{ingredient.purchase_price.toLocaleString()}</div>
                   <div>{ingredient.purchase_quantity.toLocaleString()}{ingredient.unit}</div>
-                  <div>￥{calcUnitPrice(ingredient).toFixed(2)} / {ingredient.unit}</div>
+                  <div className={styles.priceCell}>
+                    <span>￥{calcUnitPrice(ingredient).toFixed(2)} / {ingredient.unit}</span>
+                    {(ingredient.tax_add_rate !== 0 || ingredient.yield_rate !== 100) && (
+                      <span className={styles.adjust}>
+                        {ingredient.tax_add_rate !== 0 && <span>税+{ingredient.tax_add_rate}%</span>}
+                        {ingredient.yield_rate !== 100 && <span>歩留まり{ingredient.yield_rate}%</span>}
+                      </span>
+                    )}
+                  </div>
                 </Link>
               </li>
             ))}
