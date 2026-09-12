@@ -204,13 +204,6 @@ $cols: minmax(0, 1fr) 130px 140px 130px;
       }
     }
   }
-  span{
-    display: block;
-    height: 1em;
-    border-radius: 4px;
-    background: $border;
-    animation: skeletonPulse 1.4s ease-in-out infinite;
-  }
   div:first-child span{
     width: 55%;
   }

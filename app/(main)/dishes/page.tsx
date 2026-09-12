@@ -183,11 +183,11 @@ const DishesList = () => {
             {[...Array(5)].map((_, i) => (
               <li className={styles.skeletonRow} key={i}>
                 <div className={styles.skeletonInner}>
-                  <div><span /></div>
-                  <div><span /></div>
-                  <div><span /></div>
-                  <div><span /></div>
-                  <div><span /></div>
+                  <div><span className="skeletonBar" /></div>
+                  <div><span className="skeletonBar" /></div>
+                  <div><span className="skeletonBar" /></div>
+                  <div><span className="skeletonBar" /></div>
+                  <div><span className="skeletonBar" /></div>
                 </div>
               </li>
             ))}

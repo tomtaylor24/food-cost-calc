@@ -156,10 +156,28 @@ dd {
 }
 
 // コンポーネント
+@keyframes skeletonShimmer {
+  from { background-position: 100% 0; }
+  to   { background-position: -100% 0; }
+}
 @keyframes skeletonPulse {
   0%   { opacity: 1; }
   50%  { opacity: 0.4; }
   100% { opacity: 1; }
+}
+.skeletonBar{
+  display: block;
+  height: 1em;
+  border-radius: 4px;
+  background: linear-gradient(90deg, $border 30%, #F3F4F6 50%, $border 70%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce){
+  .skeletonBar{
+    background: $border;
+    animation: skeletonPulse 2s ease-in-out infinite;
+  }
 }
 .layout{
   display: grid;
