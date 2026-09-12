@@ -179,6 +179,39 @@ dd {
     animation: skeletonPulse 2s ease-in-out infinite;
   }
 }
+@keyframes loadingShow {
+  to { opacity: 1; }
+}
+.loadingBlock{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  margin-top: 28px;
+  opacity: 0;
+  animation: loadingShow 0s linear 200ms forwards;
+}
+.loadingSpinner{
+  width: 24px;
+  height: 24px;
+  border: 2px solid $border;
+  border-top-color: $main;
+  border-radius: 50%;
+  animation: btnSpin .8s linear infinite;
+}
+@media (prefers-reduced-motion: reduce){
+  .loadingSpinner{
+    animation-duration: 2s;
+  }
+}
+.srOnly{
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .layout{
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
