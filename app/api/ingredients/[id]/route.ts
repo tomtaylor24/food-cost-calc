@@ -4,16 +4,16 @@ import type { RowDataPacket, ResultSetHeader } from "mysql2";
 import pool from "@/app/utils/db";
 import { ingredientSchema } from "@/app/utils/schemas";
 import readJson from "@/app/utils/readJson";
-import type { Ingredient, PriceHistoryRow } from "@/app/types";
+import type { Ingredient, PriceHistoryRow, UsedDish } from "@/app/types";
 import { isDuplicateEntry, isStillReferenced } from "@/app/utils/dbError";
 
 type Context = {
   params: Promise<{ id: string }>
 }
 
-type IngredientWithCountRow = Ingredient & RowDataPacket & {
-  used_count: number
-}
+type IngredientRow = Ingredient & RowDataPacket
+
+type UsedDishRow = UsedDish & RowDataPacket
 
 type PriceSnapshotRow = RowDataPacket & {
   purchase_price: number
@@ -31,19 +31,27 @@ export async function GET(request: Request, context: Context) {
   } else {
     try {
       const params = await context.params
-      // 使用件数はサブクエリで一緒に取る。UI がこの件数で削除ボタンを disabled にする
-      const [rows] = await pool.query<IngredientWithCountRow[]>(
-        `SELECT i.id, i.user_id, i.name, i.name_kana, i.purchase_price, i.purchase_quantity,
-                i.unit, i.yield_rate, i.tax_add_rate, i.supplier, i.note, i.created_at,
-                (SELECT COUNT(*) FROM dish_ingredients di WHERE di.ingredient_id = i.id) AS used_count
-         FROM ingredients i
-         WHERE i.id = ? AND i.user_id = ?`,
+      const [rows] = await pool.query<IngredientRow[]>(
+        `SELECT id, user_id, name, name_kana, purchase_price, purchase_quantity,
+                unit, yield_rate, tax_add_rate, supplier, note, created_at
+         FROM ingredients
+         WHERE id = ? AND user_id = ?`,
         [params.id, payload.userId]
       )
       if (rows.length === 0) {
         return NextResponse.json({ message: "食材が見つかりません" }, { status: 404 })
       }
-      const { used_count, ...ingredient } = rows[0]
+      const ingredient = rows[0]
+
+      // UI はこの一覧が空かどうかで削除ボタンを disabled にする
+      const [usedDishes] = await pool.query<UsedDishRow[]>(
+        `SELECT d.id, d.name, di.quantity
+         FROM dish_ingredients di
+         JOIN dishes d ON d.id = di.dish_id
+         WHERE di.ingredient_id = ? AND d.user_id = ?
+         ORDER BY d.name`,
+        [params.id, payload.userId]
+      )
 
       const [history] = await pool.query<HistoryRow[]>(
         `SELECT id, purchase_price, purchase_quantity, yield_rate, tax_add_rate, changed_at
@@ -58,7 +66,7 @@ export async function GET(request: Request, context: Context) {
         message: "食材詳細取得成功",
         ingredient: {
           ...ingredient,
-          dish_ingredients: [{ count: used_count }],
+          used_dishes: usedDishes,
           ingredient_price_history: history
         }
       }, { status: 200 })

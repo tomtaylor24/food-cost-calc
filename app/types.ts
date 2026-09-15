@@ -39,10 +39,14 @@ export type PriceHistoryRow = {
   changed_at: string
 }
 
+export type UsedDish = {
+  id: number
+  name: string
+  quantity: number
+}
+
 export type IngredientDetail = Ingredient & {
-  dish_ingredients: {
-    count: number
-  }[]
+  used_dishes: UsedDish[]
   ingredient_price_history: PriceHistoryRow[]
 }
 

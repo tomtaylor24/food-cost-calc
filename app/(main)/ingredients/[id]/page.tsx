@@ -12,7 +12,7 @@ import Combobox from "@/app/components/combobox"
 import LoadingBlock from "@/app/components/loadingBlock"
 import { UNIT_OPTIONS } from "@/app/utils/units"
 import { IngredientDetail } from "@/app/types"
-import type { PriceHistoryRow } from "@/app/types"
+import type { PriceHistoryRow, UsedDish } from "@/app/types"
 import { calcUnitPrice } from "@/app/utils/calcCost"
 import useKanaCapture from "@/app/utils/useKanaCapture"
 import { ingredientFormSchema } from "@/app/utils/schemas"
@@ -24,7 +24,7 @@ type Props = {
 type IngredientForm = z.infer<typeof ingredientFormSchema>
 
 const UpdateIngredient = (context: Props) => {
-  const [usedCount, setUsedCount] = useState(0)
+  const [usedDishes, setUsedDishes] = useState<UsedDish[]>([])
   const [priceHistory, setPriceHistory] = useState<PriceHistoryRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -100,7 +100,7 @@ const UpdateIngredient = (context: Props) => {
           supplier: singleItem.supplier ?? "",
           note: singleItem.note ?? ""
         })
-        setUsedCount(singleItem.dish_ingredients[0]?.count ?? 0)
+        setUsedDishes(singleItem.used_dishes)
         setPriceHistory(singleItem.ingredient_price_history ?? [])
         setIsLoading(false)
       } catch {
@@ -197,19 +197,13 @@ const UpdateIngredient = (context: Props) => {
             <button form="ingredientForm" className="btn formSubmit" disabled={isSubmitting || isLoading} aria-busy={isSubmitting}>
               {isSubmitting && <span className="btnSpinner" aria-hidden="true" />}変更を保存
             </button>
-            <button className="formDelete" type="button" onClick={handleDelete} disabled={isSubmitting || isLoading || usedCount > 0}>食材を削除</button>
+            <button className="formDelete" type="button" onClick={handleDelete} disabled={isSubmitting || isLoading || usedDishes.length > 0}>食材を削除</button>
           </div>
         </div>
 
         {isLoading && <LoadingBlock />}
 
         <div hidden={isLoading}>
-          {usedCount > 0 && (
-            <p className="pageNote" role="status">
-              この食材は<strong>{usedCount}件の商品</strong>で使われているため削除できません。先に商品側から取り除いてください。
-            </p>
-          )}
-
           <form id="ingredientForm" className={`form ${styles.form}`} onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className={styles.formRow}>
               <dl>
@@ -341,6 +335,31 @@ const UpdateIngredient = (context: Props) => {
                       <div>￥{row.purchase_price.toLocaleString()}</div>
                       <div>{row.purchase_quantity.toLocaleString()}{unit}</div>
                       <div>￥{calcUnitPrice(row).toFixed(2)} / {unit}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {usedDishes.length > 0 && (
+            <div className={styles.usedDishes}>
+              <div className="sectionHead">
+                <p className="sectionLabel">使われている商品</p>
+                <p className="sectionNote">{usedDishes.length}件で使用中のため、この食材は削除できません</p>
+              </div>
+              <div className="tableCard">
+                <div className={styles.usedHead}>
+                  <div>商品名</div>
+                  <div>使用量</div>
+                </div>
+                <ul>
+                  {usedDishes.map((dish) => (
+                    <li className={styles.usedRow} key={dish.id}>
+                      <Link href={`/dishes/${dish.id}`}>
+                        <div>{dish.name}</div>
+                        <div>{dish.quantity.toLocaleString()}{unit}</div>
+                      </Link>
                     </li>
                   ))}
                 </ul>
